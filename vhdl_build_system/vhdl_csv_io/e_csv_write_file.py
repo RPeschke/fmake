@@ -1,10 +1,11 @@
-e_csv_write_file="""library ieee;
+e_csv_write_file="""
+library ieee;
   use ieee.std_logic_1164.all;
 
 
   use work.CSV_UtilityPkg.all;
   use STD.textio.all;
-  use work.text_io_export_csv.all;
+  
 
 
 
@@ -23,29 +24,38 @@ entity csv_write_file is
 end csv_write_file;
 
 architecture Behavioral of csv_write_file is
+  constant Integer_width : integer := 5;
 begin
 
   seq : process(clk) is
-    file outBuffer : text;  
-    variable csv : csv_exp_file;
-
-
+    file outBuffer : text open write_mode is FileName;  
+    
+    variable done_header : boolean := false;
+    variable currentline : line;
+    variable sim_time_len_v : natural := 0;
   begin
     if rising_edge(clk) then 
-      
-      if not csv_isOpen(csv) then
-        report "<csv_openFile>" ;
-        csv_openFile(csv,outBuffer, FileName, HeaderLines, NUM_COL - 1 );
+      --write(currentline, string'("asdasdasd"));
+      if not done_header then 
+        write(currentline, string'("Time; "));
+        write(currentline, HeaderLines);
+        writeline(outBuffer , currentline);
+        
+        done_header := true;
       end if;
 
-      for i in 0 to NUM_COL -1  loop 
-        csv_set(csv,i,Rows(i));
+      write(currentline,  sim_time_len_v , right, Integer_width);
+      for i in 0 to  NUM_COL - 1 loop 
+        write(currentline, string'("; "));
+        write(currentline,  Rows(i) , right, Integer_width);
+        
       end loop;
-      
-      
-      csv_write(csv,outBuffer);
+      writeline(outBuffer , currentline);
+      sim_time_len_v := sim_time_len_v +1;
     end if;
-  end process seq;
+  end process;
 
 end Behavioral;
+
+
 """

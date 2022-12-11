@@ -1,4 +1,5 @@
-ClockGenerator = """library ieee;
+ClockGenerator = """
+library ieee;
   use ieee.std_logic_1164.all;
   use IEEE.NUMERIC_STD.all;
 

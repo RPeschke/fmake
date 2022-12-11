@@ -1,4 +1,5 @@
-type_conversions_helper = """library IEEE;
+type_conversions_helper = """
+library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use ieee.numeric_std.all;
 
@@ -212,4 +213,6 @@ end procedure;
   end procedure;
 
 end package body type_conversions_pgk;
+
+
 """

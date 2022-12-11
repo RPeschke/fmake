@@ -83,9 +83,7 @@ def split_test_case(InputTestCase):
     
 def split_test_case_wrap(x):
     parser = argparse.ArgumentParser(description='Creates Test benches for a given entity')
-    parser.add_argument('--testcase', help='Path to the Test Case File',default="TargetX/tests/TXWaveFormReadout/txwaveformreadout_tb_csv.testcase.xml")
-    #parser.add_argument('--StimulusCSV', help='Path to the simulus csv file',default="txwaveformreadout")
-    #parser.add_argument('--ReferenceCSV', help='path to the reference csv File',default="1000")
+    parser.add_argument('--testcase', help='Path to the Test Case File',default="" , required=True)
 
     args = parser.parse_args(x[2:])
     

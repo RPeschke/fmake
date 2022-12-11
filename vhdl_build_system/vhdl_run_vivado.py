@@ -19,6 +19,7 @@ from vhdl_build_system.Convert2CSV import Convert2CSV , Convert2CSV_add_CL_args
 
 
 def vivado_run(args):
+    vivado_path = load_file(args.vivado_path)
     vprint.level = int( args.verbosity)
     entity_name =  args.entity
     path =   "build/" +entity_name+"/"
@@ -49,7 +50,7 @@ def vivado_run(args):
     
     cmd = """cd build/{entity_name}  && {vivado_path} && xelab  {entity_name} -prj  {entity_name}.prj --debug all && xsim work.{entity_name}  -t run.tcl  {gui}""".format(
         entity_name = entity_name ,  
-        vivado_path = args.vivado_path,
+        vivado_path = vivado_path,
         gui = "-gui" if args.run_with_gui else "" 
     )
     vprint(1)("Run Command: " , cmd)
@@ -72,7 +73,7 @@ def vivado_run_wrap(x):
     cl_add_OutputCSV(parser)
     cl_add_gui(parser=parser)
     
-    parser.add_argument('--vivado_path', help='Path to the vivado settings64.bat file',default="C:/Xilinx/Vivado/2021.2/settings64.bat")
+    parser.add_argument('--vivado_path', help='Path to the vivado settings64.bat file',default="build/vivado_path.txt")
     args = extract_cl_arguments(parser, x)
 
     vivado_run(args= args)

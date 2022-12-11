@@ -2,6 +2,4 @@ from vhdl_build_system.vhdl_csv_io.ClockGenerator import ClockGenerator
 from vhdl_build_system.vhdl_csv_io.CSV_UtilityPkg import CSV_UtilityPkg
 from vhdl_build_system.vhdl_csv_io.e_csv_read_file import e_csv_read_file
 from vhdl_build_system.vhdl_csv_io.e_csv_write_file import e_csv_write_file
-from vhdl_build_system.vhdl_csv_io.text_io_export_csv import text_io_export_csv
-from vhdl_build_system.vhdl_csv_io.text_io_import_csv import text_io_import_csv
 from vhdl_build_system.vhdl_csv_io.type_conversions_helper import type_conversions_helper

@@ -1,114 +1,50 @@
-e_csv_read_file = """library ieee;
-  use ieee.std_logic_1164.all;
+e_csv_read_file = """
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+USE work.CSV_UtilityPkg.ALL;
+USE STD.textio.ALL;
 
+ENTITY csv_read_file IS
+  GENERIC (
+    FileName : STRING := "read_file_ex.txt";
+    NUM_COL : INTEGER := 3;
+    HeaderLines : INTEGER := 1
 
-  use work.CSV_UtilityPkg.all;
-  use STD.textio.all;
-  use work.text_io_import_csv.all;
-
-
-entity csv_read_file is
-  generic (
-    FileName : string := "read_file_ex.txt";
-    NUM_COL : integer := 3;
-    HeaderLines :integer :=1;
-    Delay : time := 2 ns ;
-    t_step : time := 1 ns;
-    useExternalClk : boolean := false
   );
-  port(
-    clk : in STD_LOGIC;
-    
-    Rows : out c_integer_array(NUM_COL -1 downto 0) := (others => 0);
+  PORT (
+    clk : IN STD_LOGIC;
 
-    Index : out integer := 0;
-    eof : out STD_LOGIC := '0'
-  ); 
-end csv_read_file;
+    Rows : OUT c_integer_array(NUM_COL -1 downto 0)   := (OTHERS => 0);
 
-architecture Behavioral of csv_read_file is
+    Index : OUT INTEGER := 0;
+    eof : OUT STD_LOGIC := '0'
+  );
+END csv_read_file;
 
-begin
-  noClk  : if useExternalClk = false generate 
-    seq : process  is
-      file input_buf : text;  -- text is keyword
+ARCHITECTURE Behavioral OF csv_read_file IS
 
-      variable csv : csv_file;
-      variable isEnd : boolean := False;
-      variable  timeCounter: integer := 0;
-      variable time_hasPassed: boolean := false;
-    begin
+BEGIN
 
-      if not csv_isOpen(csv) and not isEnd then
-        csv_openFile(csv,input_buf, FileName, HeaderLines, NUM_COL - 1);
-      end if;
-
-      while (not isEnd) loop
-        if not endfile(input_buf) then 
-          csv_readLine(csv,input_buf);
-          time_hasPassed := false;
-
-
-          while(not time_hasPassed) loop
-            wait for t_step;
-            timeCounter := timeCounter + 1;
-            if timeCounter > csv_get(csv, 0)  then
-              time_hasPassed := true;
-            end if;
-          end loop;
-
-          for i in 0 to NUM_COL -1  loop
-            Rows(i) <= csv_get(csv, i)  ;
-          end loop;
-          Index <= csv_getIndex(csv);
-        else 
-          csv_close(csv,input_buf);
-          isEnd := True;
-          eof <= '1';
-        end if;
-      end loop;     
-      while (TRUE) loop
-        wait for 100 ns;
+  PROCESS (clk) IS
+    FILE input_buf : text open read_mode is FileName; -- text is keyword
+    variable currentline : line;
+    variable line_counter : natural := 0;
+    VARIABLE V_Rows : c_integer_array(NUM_COL -1 downto 0)  := (OTHERS => 0);
+  BEGIN
+    IF (falling_edge(clk)) THEN
+      while line_counter <= HeaderLines loop
+        readline(input_buf, currentline);
+        line_counter := line_counter + 1;
       end loop;
-    end process seq;
 
-  end generate noClk;
-  
-    useClk  : if useExternalClk = true generate 
-      seq1 : process(clk)  is
-        file input_buf : text;  -- text is keyword
+      readline(input_buf, currentline);
 
-        variable csv : csv_file;
-        variable isEnd : boolean := False;
-
-
-      begin
-        if(falling_edge(clk)) then
-        if not csv_isOpen(csv) and not isEnd then
-          csv_openFile(csv,input_buf, FileName, HeaderLines, NUM_COL -1);
-        end if;
-
-        
-          if not endfile(input_buf) then 
-            csv_readLine(csv,input_buf);
-   
-            for i in 0 to NUM_COL -1 loop
-              Rows(i) <= csv_get(csv, i)  ;
-            end loop;
-            Index <= csv_getIndex(csv);
-          else 
-            csv_close(csv,input_buf);
-            isEnd := True;
-            eof <='1';
-          end if;
-       
-
-        
-      end if;
-      end process seq1;
-      
-     end generate useClk;   
-end Behavioral;
-
+    	for i in 0 to  NUM_COL -1 loop
+    		read(currentline, V_Rows(i));
+    	end loop;
+      Rows <= V_Rows;
+    END IF;
+  END PROCESS;
+END Behavioral;
 
 """
