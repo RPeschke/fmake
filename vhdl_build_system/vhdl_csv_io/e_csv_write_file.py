@@ -1,4 +1,5 @@
 e_csv_write_file="""
+
 library ieee;
   use ieee.std_logic_1164.all;
 
@@ -13,7 +14,7 @@ entity csv_write_file is
   generic (
     FileName : string := "read_file_ex.txt";
     NUM_COL : integer := 3;
-    HeaderLines :string := "x; y; z"
+    HeaderLines :string := "x, y, z"
   );
   port(
     clk : in sl;
@@ -37,16 +38,23 @@ begin
     if rising_edge(clk) then 
       --write(currentline, string'("asdasdasd"));
       if not done_header then 
-        write(currentline, string'("Time; "));
+        write(currentline, string'("Time, "));
         write(currentline, HeaderLines);
         writeline(outBuffer , currentline);
-        
+
+        write(currentline,  0 , right, Integer_width);
+        for i in 0 to  NUM_COL - 1 loop 
+          write(currentline, string'(", "));
+          write(currentline,  0 , right, Integer_width);
+          
+        end loop;
+        writeline(outBuffer , currentline);
         done_header := true;
       end if;
 
       write(currentline,  sim_time_len_v , right, Integer_width);
       for i in 0 to  NUM_COL - 1 loop 
-        write(currentline, string'("; "));
+        write(currentline, string'(", "));
         write(currentline,  Rows(i) , right, Integer_width);
         
       end loop;
@@ -56,6 +64,7 @@ begin
   end process;
 
 end Behavioral;
+
 
 
 """
