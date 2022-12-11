@@ -3,3 +3,7 @@
 /register/
 /session_02/
 /vhdl_build_system.egg-info/*
+/fmake.egg-info/
+/empty_testbench.xlsm
+/run.py
+/run_simulation.sh

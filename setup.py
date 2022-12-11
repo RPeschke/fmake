@@ -4,11 +4,11 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="vhdl_build_system", # Replace with your own username
+    name="fmake", 
     version="0.0.1",
     author="Richard Peschke",
     author_email="peschke@hawaii.edu",
-    description="High Level Object Oriented Hardware Description Library",
+    description="build scripts for firmware projects",
     long_description="long_description",
     long_description_content_type="text/markdown",
     url="",
@@ -28,7 +28,6 @@ setuptools.setup(
     python_requires='>=3.8',
     
     entry_points = {
-        'console_scripts': ['hello_world=vhdl_build_system.example_script:hello_world'],
         'console_scripts': ['fmake=vhdl_build_system.main_vhdl_make:main_vhdl_make'],
     }
 )
