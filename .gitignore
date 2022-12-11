@@ -1,0 +1,5 @@
+/build/*
+/firmware-ethernet/
+/register/
+/session_02/
+/vhdl_build_system.egg-info/*
