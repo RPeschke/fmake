@@ -258,7 +258,7 @@ def make_out_header(entityDef):
     for i,x in ports.iterrows():
             
         HeaderLines += start + x["plainName"]
-        start="; "
+        start=", "
 
     return HeaderLines
 
@@ -481,7 +481,7 @@ def make_test_bench_main_wrap(x):
     args = parser.parse_args(x[2:])
     make_test_bench_main(args.entity,args.NumberOfRows, args.OutputPath)
     
-    URL = "https://github.com/RPeschke/vhdl_build_system/raw/master/protoBuild/empty_testbench.xlsm"
+    URL = "https://github.com/RPeschke/fmake/raw/main/proto_build/empty_testbench.xlsm"
     response = wget.download(URL, args.OutputPath+"/" +args.entity+".xlsm")
 
 add_programm("make-testbench", make_test_bench_main_wrap)   
