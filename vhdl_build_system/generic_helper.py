@@ -30,7 +30,7 @@ def extract_cl_arguments(parser, x):
     return args
 
 def cl_add_entity(parser):
-    parser.add_argument('--entity',      help='entity name',default="")
+    parser.add_argument('--entity',      help='entity name',default="",required=True)
     
 def cl_add_OutputCSV(parser):
     parser.add_argument('--OutputCSV',      help='output csv file',default="")

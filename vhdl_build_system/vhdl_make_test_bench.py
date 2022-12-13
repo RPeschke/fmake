@@ -483,6 +483,7 @@ def make_test_bench_main_wrap(x):
     
     URL = "https://github.com/RPeschke/fmake/raw/main/proto_build/empty_testbench.xlsm"
     response = wget.download(URL, args.OutputPath+"/" +args.entity+".xlsm")
+    print("\ndone make-testbench\n\n")
 
 add_programm("make-testbench", make_test_bench_main_wrap)   
 

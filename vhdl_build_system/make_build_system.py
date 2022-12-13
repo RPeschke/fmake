@@ -10,6 +10,7 @@ def make_build_wrap(x):
     args = extract_cl_arguments(parser , x)
     try_make_dir("build")
     save_file("build/fmake.txt",  "")
+    save_file("build/.gitignore",  "*\n!.gitignore\n")
     save_file("build/vivado_path.txt",  "C:/Xilinx/Vivado/2021.2/settings64.bat")
     
     
