@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fmake", 
-    version="0.0.1",
+    version="0.0.4",
     author="Richard Peschke",
     author_email="peschke@hawaii.edu",
     description="build scripts for firmware projects",
@@ -23,7 +23,8 @@ setuptools.setup(
           'numpy',
           'matplotlib',
           'wget',
-          'openpyxl'
+          'openpyxl',
+          'uproot'
     ],
     python_requires='>=3.8',
     

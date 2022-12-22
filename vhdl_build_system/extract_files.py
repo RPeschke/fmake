@@ -1,0 +1,60 @@
+import zipfile
+
+import shutil
+import os
+from  vhdl_build_system.vhdl_programm_list           import add_programm 
+from  vhdl_build_system.generic_helper               import  vprint, extract_cl_arguments
+import argparse
+
+build_folder = "build/"
+
+def extract_bitfiles(in_zip_file, ouput_path = None):
+    basename = os.path.basename(in_zip_file) 
+    out_folder = build_folder+basename+"/zip/"
+    try:
+        os.mkdir(build_folder+basename )
+        os.mkdir(out_folder)
+    except:
+        pass
+    with zipfile.ZipFile(in_zip_file,"r") as zip_ref:
+        zip_ref.extractall(out_folder)
+        
+        
+    dir_hwh = [x for x in  os.listdir(out_folder) if ".hwh" in  x ]
+    dir_bit= [x for x in  os.listdir(out_folder) if  ".bit" in x ]
+    print(dir_bit)
+    print(dir_hwh)
+
+    if len(dir_bit) != 1:
+        print("error")
+        return
+        
+    if len(dir_bit) != 1:
+        print("error")
+        return
+    ouput_hwh = build_folder+basename +"/"+dir_bit[0][:-4] + ".hwh" 
+    output_bit = build_folder+basename +"/"+dir_bit[0] 
+    shutil.move(out_folder + dir_bit[0], output_bit )
+    shutil.move(out_folder + dir_hwh[0], ouput_hwh  )
+    
+    if ouput_path is None:
+        return
+    
+    shutil.copy(output_bit, ouput_path)
+    shutil.copy(ouput_hwh,  ouput_path)
+    
+    
+def extract_bitfiles_wrap(x):
+    parser = argparse.ArgumentParser(description='Creates Test benches for a given entity')
+    
+    
+    parser.add_argument('--xsa', help='',default="" ,required=True)
+    parser.add_argument('--out', help='',default= None)
+    args = extract_cl_arguments(parser= parser,x=x)
+    extract_bitfiles(args.xsa, args.out)
+    
+
+
+add_programm("extract-xsa", extract_bitfiles_wrap)   
+    
+      

@@ -82,15 +82,27 @@ def vhdl_parser_types(FileName, ret1):
 
 def vhdl_parser_constants(FileName, ret1):
     FileContent=load_file_witout_comments(FileName)   
-    consts = FileContent.split("constant")[1:]     
-    for x in consts:
-        x = x.split(";")[0].strip()
-        sp = x.split(":")
+    
+    
+    consts = FileContent.split(" constant ")
+    
+    counter_open  = [x.count('(') for x in consts]
+    counter_close = [x.count(')') for x in consts]
+    
+    
+    for i, x in enumerate( consts[1:] ):
+        if sum(counter_open[:i+1])-sum(counter_close[:i+1]) != 0:
+            continue
+        
+       
+        #x1 = x.split(" constant ")[1].strip()
+        x1 = x.split(";")[0].strip()
+        sp = x1.split(":")
         
         try:
             ret1["constants"].extend(  [ [ FileName ,  sp[0].strip() , sp[1].strip(), sp[2][1:].strip() ]  ]  )
         except:
-            print("Error in reading constants in file: " + FileName)
+            print("Error in reading constants in file: " + FileName, "\nline: "+ x + "\nsp: ", sp)
     
             
 def vhdl_parser(FileName, ret1={}):

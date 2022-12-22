@@ -9,3 +9,7 @@ import vhdl_build_system.Convert2CSV
 import vhdl_build_system.make_build_system
 
 import vhdl_build_system.run_ise 
+
+import vhdl_build_system.extract_files 
+
+import vhdl_build_system.make_test_bench_stimulus
