@@ -29,7 +29,7 @@ def make_input_table(FileName):
 
 def read_file(fileName, branch):
     if fileName[-3:].lower() == "csv":
-        df = pd.read_csv(fileName)
+        df = pd.read_csv(fileName,comment='#',skip_blank_lines=True)
         df = df.rename(columns=lambda x: x.strip())
         return df
     

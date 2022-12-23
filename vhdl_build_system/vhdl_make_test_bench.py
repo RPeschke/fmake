@@ -9,7 +9,7 @@ from  vhdl_build_system.vhdl_entity_class            import vhdl_entity
 from  vhdl_build_system.vhdl_merge_split_test_cases  import merge_test_case
 from  vhdl_build_system.generic_helper               import save_file, try_make_dir, cl_add_entity, join_str
 from  vhdl_build_system.vhdl_programm_list           import add_programm 
-from  vhdl_build_system.generic_helper               import  vprint, extract_cl_arguments
+from  vhdl_build_system.generic_helper               import vprint, extract_cl_arguments
 
 import argparse
 import numpy as np 

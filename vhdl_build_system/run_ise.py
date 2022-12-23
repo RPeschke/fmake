@@ -78,8 +78,7 @@ def run_ise(entity_name, input_xls, Sheet, ouput_csv, drop, Run_with_gui = False
     
     
 def run_ise_wrap(x):
-    vprint(0)("hello from vavado ISE")
-    parser = argparse.ArgumentParser(description='Excel To CSV Converter')
+    parser = argparse.ArgumentParser(description='run_ise_wrap')
     cl_add_entity(parser)
     cl_add_OutputCSV(parser)
     cl_add_gui(parser=parser)
