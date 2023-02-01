@@ -65,9 +65,9 @@ def vivado_run(args):
 
 
 def vivado_run_wrap(x):
-    vprint(0)("hello from vavado run")
     parser = argparse.ArgumentParser(description='Run Entity in vavado simulator')
     cl_add_entity(parser)
+    vprint(0)("hello from run-vivado")
     
     Convert2CSV_add_CL_args(parser)
     cl_add_OutputCSV(parser)

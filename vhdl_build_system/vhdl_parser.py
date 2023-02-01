@@ -80,22 +80,28 @@ def vhdl_parser_types(FileName, ret1):
         else:
             raise Exception("Unknown type")
 
-def vhdl_parser_constants(FileName, ret1):
-    FileContent=load_file_witout_comments(FileName)   
-    
-    
-    consts = FileContent.split(" constant ")
+def parse_get_top_level_candidates(content, keyword):
+    consts = content.split(keyword)
     
     counter_open  = [x.count('(') for x in consts]
     counter_close = [x.count(')') for x in consts]
-    
-    
+    ret = []
     for i, x in enumerate( consts[1:] ):
         if sum(counter_open[:i+1])-sum(counter_close[:i+1]) != 0:
             continue
+        ret.append(x)
         
-       
-        #x1 = x.split(" constant ")[1].strip()
+    return ret
+    
+
+def vhdl_parser_constants(FileName, ret1):
+    FileContent=load_file_witout_comments(FileName)   
+    
+    consts = parse_get_top_level_candidates(FileContent, " constant ")
+   
+    
+    
+    for i, x in enumerate( consts[1:] ):
         x1 = x.split(";")[0].strip()
         sp = x1.split(":")
         
