@@ -95,6 +95,8 @@ class SCROD_ethernet:
         data = self.__ArrayToHex(data)
         #print (data)
         return data
+    
+    
     def hasData(self):
          rdy_read, rdy_write, sock_err = select.select([self.clientSock,], [], [],0.1)
          #print (rdy_read, rdy_write, sock_err)
