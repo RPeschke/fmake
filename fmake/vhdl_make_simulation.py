@@ -1,14 +1,14 @@
 import os
 
 import argparse
-from vhdl_build_system.generic_helper import try_make_dir,save_file,load_file, cl_add_entity
+from fmake.generic_helper import try_make_dir,save_file,load_file, cl_add_entity
 
-from vhdl_build_system.vhdl_dependency_db  import get_dependency_db
+from fmake.vhdl_dependency_db  import get_dependency_db
 
 
-from vhdl_build_system.vhdl_programm_list import  add_programm
+from fmake.vhdl_programm_list import  add_programm
 
-from vhdl_build_system.generic_helper import  vprint, extract_cl_arguments
+from fmake.generic_helper import  vprint, extract_cl_arguments
 
 def vhdl_make_simulation_intern(entity,BuildFolder = "build/"):  
     OutputPath = BuildFolder + entity + "/"

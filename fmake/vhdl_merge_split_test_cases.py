@@ -6,7 +6,7 @@ import pandas as pd
 
 from .generic_helper import load_file, save_file
 import argparse
-from vhdl_build_system.vhdl_programm_list import add_programm
+from fmake.vhdl_programm_list import add_programm
 
 
 def Convert2CSV(XlsFile,Sheet,OutputFile):

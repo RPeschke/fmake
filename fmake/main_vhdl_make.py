@@ -1,5 +1,5 @@
 import sys
-from vhdl_build_system.vhdl_programm_list import get_function,  print_list_of_programs
+from fmake.vhdl_programm_list import get_function,  print_list_of_programs
 
     
     

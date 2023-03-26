@@ -1,8 +1,8 @@
-from vhdl_build_system.vhdl_programm_list import add_programm
-from vhdl_build_system.generic_helper import  extract_cl_arguments, try_make_dir, save_file
+from fmake.vhdl_programm_list import add_programm
+from fmake.generic_helper import  extract_cl_arguments, try_make_dir, save_file
 import argparse
 
-import vhdl_build_system.vhdl_csv_io as csv_io
+import fmake.vhdl_csv_io as csv_io
 
 
 def make_build_wrap(x):

@@ -3,13 +3,13 @@ import numpy as np
 import uproot
 import argparse
 
-from vhdl_build_system.vhdl_programm_list import add_programm
-import vhdl_build_system.vhdl_load_file_without_comments as ld
-from vhdl_build_system.vhdl_dependency_db import  get_dependency_db
+from fmake.vhdl_programm_list import add_programm
+import fmake.vhdl_load_file_without_comments as ld
+from fmake.vhdl_dependency_db import  get_dependency_db
 
-from  vhdl_build_system.generic_helper               import save_file, try_make_dir, cl_add_entity, join_str
-from  vhdl_build_system.vhdl_programm_list           import add_programm 
-from  vhdl_build_system.generic_helper               import  vprint, extract_cl_arguments
+from  fmake.generic_helper               import save_file, try_make_dir, cl_add_entity, join_str
+from  fmake.vhdl_programm_list           import add_programm 
+from  fmake.generic_helper               import  vprint, extract_cl_arguments
 
 
 

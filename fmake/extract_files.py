@@ -2,8 +2,8 @@ import zipfile
 
 import shutil
 import os
-from  vhdl_build_system.vhdl_programm_list           import add_programm 
-from  vhdl_build_system.generic_helper               import  vprint, extract_cl_arguments
+from  fmake.vhdl_programm_list           import add_programm 
+from  fmake.generic_helper               import  vprint, extract_cl_arguments
 import argparse
 
 build_folder = "build/"

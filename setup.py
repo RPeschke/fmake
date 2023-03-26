@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fmake", 
-    version="0.0.8",
+    version="0.0.9",
     author="Richard Peschke",
     author_email="peschke@hawaii.edu",
     description="build scripts for firmware projects",
@@ -29,6 +29,6 @@ setuptools.setup(
     python_requires='>=3.8',
     
     entry_points = {
-        'console_scripts': ['fmake=vhdl_build_system.main_vhdl_make:main_vhdl_make'],
+        'console_scripts': ['fmake=fmake.main_vhdl_make:main_vhdl_make'],
     }
 )

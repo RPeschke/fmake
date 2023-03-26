@@ -2,14 +2,14 @@
 
 
 
-from  vhdl_build_system.vhdl_make_test_bench_names   import get_IO_pgk_name, get_writer_record_name, get_reader_record_name, get_reader_entity_name, get_includes, get_writer_entity_name
+from  fmake.vhdl_make_test_bench_names   import get_IO_pgk_name, get_writer_record_name, get_reader_record_name, get_reader_entity_name, get_includes, get_writer_entity_name
 
-from  vhdl_build_system.vhdl_dependency_db           import get_dependency_db
-from  vhdl_build_system.vhdl_entity_class            import vhdl_entity
-from  vhdl_build_system.vhdl_merge_split_test_cases  import merge_test_case
-from  vhdl_build_system.generic_helper               import save_file, try_make_dir, cl_add_entity, join_str
-from  vhdl_build_system.vhdl_programm_list           import add_programm 
-from  vhdl_build_system.generic_helper               import vprint, extract_cl_arguments
+from  fmake.vhdl_dependency_db           import get_dependency_db
+from  fmake.vhdl_entity_class            import vhdl_entity
+from  fmake.vhdl_merge_split_test_cases  import merge_test_case
+from  fmake.generic_helper               import save_file, try_make_dir, cl_add_entity, join_str
+from  fmake.vhdl_programm_list           import add_programm 
+from  fmake.generic_helper               import vprint, extract_cl_arguments
 
 import argparse
 import numpy as np 

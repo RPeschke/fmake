@@ -3,12 +3,12 @@ import os
 import shutil 
 import platform
 
-from vhdl_build_system.vhdl_programm_list import add_programm
+from fmake.vhdl_programm_list import add_programm
 
-from vhdl_build_system.generic_helper import  vprint, try_remove_file , save_file , load_file 
-from vhdl_build_system.generic_helper import extract_cl_arguments, cl_add_entity , cl_add_OutputCSV, cl_add_gui
+from fmake.generic_helper import  vprint, try_remove_file , save_file , load_file 
+from fmake.generic_helper import extract_cl_arguments, cl_add_entity , cl_add_OutputCSV, cl_add_gui
 
-from vhdl_build_system.Convert2CSV import Convert2CSV , Convert2CSV_add_CL_args
+from fmake.Convert2CSV import Convert2CSV , Convert2CSV_add_CL_args
 
 
 
