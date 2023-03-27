@@ -66,8 +66,8 @@ class SCROD_ethernet:
     
     
     def hasData(self):
-         rdy_read, rdy_write, sock_err = select.select([self.clientSock,], [], [],0.1)
-         return len(rdy_read) > 0
+        rdy_read, rdy_write, sock_err = select.select([self.clientSock,], [], [],0.1)
+        return len(rdy_read) > 0
 
 
 def get_index():

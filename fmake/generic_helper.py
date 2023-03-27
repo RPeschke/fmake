@@ -106,6 +106,12 @@ def load_file(filename, read_function = lambda x : x.read() ):
     with open(filename) as f:
         return read_function(f)    
 
+def try_load_file(filename, read_function = lambda x : x.read()):
+    try:
+        return load_file(filename, read_function )
+    except:
+        return None
+
 def save_file(fileName,Data,newline="\n"):
     Data = Data.replace("\n",newline)
     with open(fileName,"w", newline = "") as f:
