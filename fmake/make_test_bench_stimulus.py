@@ -23,7 +23,8 @@ def append_dataframe(df, df_append):
 
 def make_input_table(FileName):
     src = ld.load_file_witout_comments(FileName )
-    columns = [x.split("data.")[1].replace(")","").strip() for x in src.split(";") if "csv_from_integer" in x] 
+    columns = [x.split("data.")[1].strip() for x in src.split(";") if "csv_from_integer" in x] 
+    columns  = [ x[:x.rfind(")")].replace(" ", "") for x in columns]
     return  pd.DataFrame(columns= columns)
 
 

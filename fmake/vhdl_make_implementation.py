@@ -99,6 +99,7 @@ def copy_ipcore_file(IPcoreList, build_path, outPath):
     
 def vhdl_make_implementation(Entity, UCF_file):
     build_path =  "build/"
+  
     Entity_build_path = build_path+  Entity +"/"
     project_file_path = Entity_build_path + Entity+ ".prj"
     xise_file_path = Entity_build_path + Entity+ ".xise"

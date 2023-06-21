@@ -37,14 +37,21 @@ BEGIN
         line_counter := line_counter + 1;
       end loop;
 
-      readline(input_buf, currentline);
+      if not endfile(input_buf) then 
+        readline(input_buf, currentline);
+      
 
-    	for i in 0 to  NUM_COL -1 loop
-    		read(currentline, V_Rows(i));
-    	end loop;
+        for i in 0 to  NUM_COL -1 loop
+          read(currentline, V_Rows(i));
+        end loop;
+      
+      else 
+        assert false report "End Of File" severity failure;
+      end if;
+      
       Rows <= V_Rows;
     END IF;
   END PROCESS;
-END Behavioral;
+END ARCHITECTURE;
 
 """

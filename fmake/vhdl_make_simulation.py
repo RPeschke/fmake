@@ -46,7 +46,7 @@ def extract_header_from_top_file(Entity, FileName,BuildFolder):
 
 def vhdl_make_simulation(Entity,BuildFolder = "build/"):
 
-    
+
     fileList = get_dependency_db().get_dependencies_and_make_project_file(Entity)
     if len(fileList)==0:
         vprint(1)("unable to find entity: ", Entity)

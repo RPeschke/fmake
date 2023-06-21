@@ -36,6 +36,10 @@ def vivado_run(args):
     if args.InputXLS != "":
         vprint(1)( "loaded  " + args.InputXLS +" -> " + intermediate_csv)
         Convert2CSV(args.InputXLS, args.SheetXLS, intermediate_csv ,args.Drop)
+        
+    if args.InputCSV != "":
+        vprint(1)( "loaded  " + args.InputCSV +" -> " + intermediate_csv)
+        shutil.copyfile(args.InputCSV, intermediate_csv)
     
     l = load_file(intermediate_csv, lambda x : len(x.readlines()) )
     vprint(1)("lines: ",l, "time in ns ", l*clock_speed)

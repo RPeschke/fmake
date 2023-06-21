@@ -27,6 +27,8 @@ def extract_cl_arguments(parser, x):
     vprint.add_cl_args(parser) 
     args = parser.parse_args(x[2:])
     vprint.use_cl_arg(args)
+    if hasattr(args , "entity"):
+        args.entity  = args.entity.lower()
     return args
 
 def cl_add_entity(parser):

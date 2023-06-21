@@ -35,6 +35,7 @@ def Convert2CSV_add_CL_args(parser):
     parser.add_argument('--InputXLS',   help='Path to the input file',default="")
     parser.add_argument('--SheetXLS',   help='Sheet inside the XLS file',default="Simulation_Input")
     parser.add_argument('--Drop',   help='drops columns from data frame',default='')
+    parser.add_argument('--InputCSV',   help='Path to the input file',default="")
     
 
 def excel_to_csv_wrap(x):
