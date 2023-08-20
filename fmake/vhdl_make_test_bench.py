@@ -214,6 +214,7 @@ entity {reader_entity}  is
     );
     port (
         clk : in std_logic ;
+        eof : out std_logic;
         data : out {reader_record_name}
     );
 end entity;   
@@ -222,18 +223,36 @@ architecture Behavioral of {reader_entity} is
 
   constant  NUM_COL    : integer := {NUM_COL};
   signal    csv_r_data : c_integer_array(NUM_COL -1 downto 0)  := (others=>0)  ;
+  signal valid : std_logic := '0';
+  signal valid_1 : std_logic := '0';
+  signal valid_2 : std_logic := '0';
+  
 begin
 
   csv_r :entity  work.csv_read_file 
     generic map (
-        FileName =>  FileName, 
-        NUM_COL => NUM_COL,
+        FileName    =>  FileName, 
+        NUM_COL     =>  NUM_COL,
         HeaderLines =>  2
     ) port map (
-        clk => clk,
-        Rows => csv_r_data
+        clk   => clk,
+        Rows  => csv_r_data,
+        valid => valid
     );
+    
+  eof <= not valid;
 
+  process(clk) is 
+  begin 
+  if rising_edge(clk) then 
+    valid_2 <= valid_1;
+    valid_1 <= valid;
+    if valid_2 = '1' and valid_1 = '0' then 
+      assert false report "Test: OK" severity failure;
+    end if;
+  end if;
+  end process;
+  
 {connections}
 
 end architecture;
@@ -292,6 +311,7 @@ entity {write_entity}  is
         FileName : string 
     ); port (
         clk : in std_logic ;
+        eof : in std_logic;
         data : in {writer_record_name}
     );
 end entity;
@@ -299,18 +319,22 @@ end entity;
 architecture Behavioral of {write_entity} is 
   constant  NUM_COL : integer := {NUM_COL};
   signal data_int   : c_integer_array(NUM_COL - 1 downto 0)  := (others=>0);
+  signal reopen_file : std_logic := '0';
 begin
 
     csv_w : entity  work.csv_write_file 
         generic map (
-            FileName => FileName,
-            HeaderLines=> "{HeaderLines}",
-            NUM_COL =>   NUM_COL 
+            FileName    =>   FileName,
+            HeaderLines =>   "{HeaderLines}",
+            NUM_COL     =>   NUM_COL ,
+            empty_line  =>   1
         ) port map(
-            clk => clk, 
-            Rows => data_int
+            clk         => clk, 
+            Rows        => data_int,
+            done        => eof,
+            reopen_file => reopen_file
         );
-
+    reopen_file <= not eof;
 
 {connections}
 
@@ -401,7 +425,7 @@ architecture behavior of {tb_entity} is
   signal clk : std_logic := '0';
   signal data_in : {readerRecordName};
   signal data_out : {writerRecordName};
-
+  signal  eof : std_logic;
 begin 
 
   clk_gen : entity work.ClockGenerator generic map ( CLOCK_period => 10 ns) port map ( clk => clk );
@@ -410,14 +434,14 @@ begin
     generic map (
         FileName => "./{tb_entity}.csv" 
     ) port map (
-        clk => clk ,data => data_in
+          clk => clk ,data => data_in , eof => eof
     );
  
   csv_write : entity work.{writer_entity_name}
     generic map (
         FileName => "./{tb_entity}_out.csv" 
     ) port map (
-        clk => clk ,data => data_out
+        clk => clk ,data => data_out , eof => eof
     );
   
 

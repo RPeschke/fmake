@@ -1,5 +1,7 @@
 e_csv_read_file = """
 
+
+
 library ieee;
 use ieee.std_logic_1164.all;
 use work.CSV_UtilityPkg.all;
@@ -27,7 +29,7 @@ end csv_read_file;
 architecture Behavioral of csv_read_file is
   signal i_valid : std_logic := '0';
 
-  type state_t is (s_idle, s_header,  s_read_file);
+  type state_t is (s_idle,  s_read_file);
   signal i_state : state_t := s_idle;
 
 begin
@@ -37,9 +39,9 @@ begin
     variable start_up : boolean := true;
     file input_buf : text; 
     variable currentline : line;
-    variable line_counter : natural := 0;
-    variable V_Rows : c_integer_array(NUM_COL - 1 downto 0) := (others => 0);
 
+    variable V_Rows : c_integer_array(NUM_COL - 1 downto 0) := (others => 0);
+    variable read_header : boolean := true;
   begin
     if (falling_edge(clk)) then
       i_valid <= '0';
@@ -48,27 +50,24 @@ begin
 
       case i_state is
         when s_idle =>
-          line_counter := 0;
+         
 
           if (start_up  and  open_on_startup ='1') or reopen_file = '1' then
             start_up := false;
             FILE_OPEN(input_buf, FileName, READ_MODE);
-            i_state <= s_header;
-          end if;
-
-          
-        when s_header =>
-          
-          
-          
-          if  line_counter < HeaderLines then 
-            readline(input_buf, currentline);
-            line_counter := line_counter + 1;
-          else 
             i_state <= s_read_file;
+            read_header := true;
           end if;
 
         when s_read_file =>
+          if read_header then
+            for i in 0 to HeaderLines - 1 loop
+                readline(input_buf, currentline);
+     
+            end loop;
+            read_header := false;
+          end if;
+
 
           if endfile(input_buf) then
             FILE_CLOSE(input_buf);
@@ -92,5 +91,10 @@ begin
   valid <= i_valid;
 
 end architecture;
+
+
+
+
+
 
 """

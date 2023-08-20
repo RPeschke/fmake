@@ -42,6 +42,11 @@ def cl_add_gui(parser):
                     const=True, default=False,
                     help='')
     
+def cl_add_run_infinitly(parser):
+    parser.add_argument('--inf', dest='run_infinitly', action='store_const',
+                    const=True, default=False,
+                    help='')
+    
 def first_diff_between_strings(x,y):
     for i in range(min(len(x),len(y))):
         if x[i] != y[i]:

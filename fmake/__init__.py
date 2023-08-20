@@ -15,3 +15,6 @@ import fmake.extract_files
 import fmake.make_test_bench_stimulus
 
 import fmake.vhdl_make_implementation
+
+from fmake.text_io_query import text_io_query
+

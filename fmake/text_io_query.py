@@ -1,5 +1,7 @@
 import pandas as pd
 
+from time import sleep
+
 def get_content(filename):
     for _ in range(10000):
         try:
@@ -21,7 +23,12 @@ def set_content(filename, content):
   
     raise Exception("wile cannot be written")
   
-  
+def to_dataframe(x):
+    if isinstance(x, pd.DataFrame):
+        return x
+    else:
+        return pd.DataFrame(x)
+
 class vhdl_file_io:
     def __init__(self, FileName , columns=None):
         self.columns = columns
@@ -31,17 +38,24 @@ class vhdl_file_io:
         self.read_FileName =  FileName + "_read.txt"
         self.write_FileName = FileName + "_write.txt"
         self.write_poll_FileName  = FileName + "_write_poll.txt"
-        
-        self.index =int( get_content(self.poll_FileName))
+        try:
+            index =int( get_content(self.poll_FileName))
+        except:
+            index = 0
+            set_content(self.poll_FileName, 0)
+            set_content(self.read_FileName, 0)
+            set_content(self.write_poll_FileName, "time, id\n 0 , 0")
+            set_content(self.write_FileName, "time, id\n 0 , 0")
+            
 
     def read_poll(self):
         return int(get_content(self.write_poll_FileName).split("\n")[1].split(",")[1])
 
 
-    def wait_for_index(self):
+    def wait_for_index(self ,index ):
         for i in range(10000):
             try:
-                if self.read_poll() ==  self.index:
+                if self.read_poll() ==  index:
                     return True
             except: 
                 pass
@@ -55,15 +69,20 @@ class vhdl_file_io:
             df.to_csv(self.read_FileName, sep = " ", index = False)
             
     def stop(self):
-        set_content(self.poll_FileName, -1 )        
+        set_content(self.poll_FileName, -1 )  
+        sleep(1)      
+        set_content(self.poll_FileName, 0 )  
         
-    def poll(self , df):
+        
+    def query(self , df):
+        df = to_dataframe(df)
+        
         self.write_file(df)
-        self.index = self.read_poll() + 1   
-        set_content(self.poll_FileName, self.index )
+        index = self.read_poll() + 1   
+        set_content(self.poll_FileName, index )
         
-        if not self.wait_for_index():
-            print("error", self.read_poll() ,self.index)
+        if not self.wait_for_index(index):
+            print("error", self.read_poll() , index)
     
         return self.read_file()
     
@@ -73,3 +92,8 @@ class vhdl_file_io:
         df = pd.read_csv(self.write_FileName)
         df.columns = df.columns.str.replace(' ', '')
         return df
+    
+    
+def text_io_query(entity, columns=None ):
+    FileName = "build/" + entity + "/text_io_polling"
+    return vhdl_file_io(FileName, columns)

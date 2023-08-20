@@ -6,13 +6,13 @@ import platform
 from fmake.vhdl_programm_list import add_programm
 
 from fmake.generic_helper import  vprint, try_remove_file , save_file , load_file 
-from fmake.generic_helper import extract_cl_arguments, cl_add_entity , cl_add_OutputCSV, cl_add_gui
+from fmake.generic_helper import extract_cl_arguments, cl_add_entity , cl_add_OutputCSV, cl_add_gui , cl_add_run_infinitly
 
 from fmake.Convert2CSV import Convert2CSV , Convert2CSV_add_CL_args
 
 
 
-def make_tcl_file(entity_name, intermediate_csv,tcl_file, do_quit = ""):
+def make_tcl_file(entity_name, intermediate_csv,tcl_file, do_quit = "" , run_infinitly = False):
     onerror = '{' +'resume}'
     clock_speed_file= "build/"+entity_name+"/"+"clock_speed.txt"
     clock_speed=int(load_file(clock_speed_file))
@@ -21,11 +21,11 @@ def make_tcl_file(entity_name, intermediate_csv,tcl_file, do_quit = ""):
         line_count =  load_file(intermediate_csv, lambda x : len(x.readlines()) )
     except:
         vprint(1)("File not found: " , intermediate_csv)
-    runtime= clock_speed * max(line_count - 3, 1)
+    runtime= "run all" if run_infinitly else "run "+ str( clock_speed * max(line_count , 1)  )+ " ns"
     save_file(tcl_file, 
 """onerror {resume} 
 wave add /
-run {runtime} ns    
+{runtime} 
 {do_quit}
 """.format(
         resume = onerror,
@@ -39,7 +39,7 @@ def run_in_bash(cmd):
         cmd = 'bash -i -c "' + cmd + '"' 
     return cmd
 
-def run_ise(entity_name, input_xls, Sheet, ouput_csv, drop,ise_path, Run_with_gui = False):
+def run_ise(entity_name, input_xls, Sheet, ouput_csv, drop,ise_path, Run_with_gui = False ,run_infinitly = False ):
     ise_path = load_file( ise_path  ).strip()
     build_path = "build/"+entity_name+"/"
     intermediate_csv = build_path + entity_name+ ".csv"
@@ -73,7 +73,7 @@ def run_ise(entity_name, input_xls, Sheet, ouput_csv, drop,ise_path, Run_with_gu
     build_program()
     
     def run_program():
-        make_tcl_file( entity_name , intermediate_csv, build_path+tclbatchfile, do_quit = tcl_do_quit)
+        make_tcl_file( entity_name , intermediate_csv, build_path+tclbatchfile, do_quit = tcl_do_quit , run_infinitly = run_infinitly )
         cmd = "source " +  ise_path + " && cd "+ build_path+ " && ./" + programm_name + " -intstyle ise -tclbatch " +tclbatchfile + cmd_arg_gui
         cmd = run_in_bash(cmd)
         vprint(2)("command: " + cmd)
@@ -93,12 +93,13 @@ def run_ise_wrap(x):
     cl_add_entity(parser)
     cl_add_OutputCSV(parser)
     cl_add_gui(parser=parser)
+    cl_add_run_infinitly(parser=parser)
     parser.add_argument('--ise_path', help='Path to the vivado settings64.bat file',default="build/ise_path.txt")
 
     Convert2CSV_add_CL_args(parser)
     
     args = extract_cl_arguments(parser, x)
     
-    run_ise(entity_name=args.entity, input_xls=args.InputXLS, Sheet=args.SheetXLS, ouput_csv=args.OutputCSV, drop = args.Drop , Run_with_gui= args.run_with_gui, ise_path = args.ise_path)
+    run_ise(entity_name=args.entity, input_xls=args.InputXLS, Sheet=args.SheetXLS, ouput_csv=args.OutputCSV, drop = args.Drop , Run_with_gui= args.run_with_gui, ise_path = args.ise_path, run_infinitly = args.run_infinitly)
     
 add_programm("run-ise", run_ise_wrap )
