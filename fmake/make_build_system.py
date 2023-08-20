@@ -21,6 +21,7 @@ def make_build_wrap(x):
     save_file("build/vhdl_csv_io/e_csv_read_file.vhd",  csv_io.e_csv_read_file)
     save_file("build/vhdl_csv_io/e_csv_write_file.vhd",  csv_io.e_csv_write_file)
     save_file("build/vhdl_csv_io/type_conversions_helper.vhd",  csv_io.type_conversions_helper)
+    save_file("build/vhdl_csv_io/csv_text_io_poll.vhd",  csv_io.csv_text_io_poll)
     
     
     

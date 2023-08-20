@@ -55,7 +55,8 @@ def run_ise(entity_name, input_xls, Sheet, ouput_csv, drop,ise_path, Run_with_gu
     if input_xls!= "":
         try_remove_file(intermediate_csv)
         Convert2CSV( input_xls, Sheet,intermediate_csv, drop )
-    cmd = run_in_bash("killall " +programm_name)   
+    
+    cmd = run_in_bash("pkill -f " +programm_name)   
     vprint(2)("command: " + cmd) 
     os.system(cmd )
     
