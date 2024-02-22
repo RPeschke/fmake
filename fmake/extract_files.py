@@ -22,15 +22,15 @@ def extract_bitfiles(in_zip_file, ouput_path = None):
         
     dir_hwh = [x for x in  os.listdir(out_folder) if ".hwh" in  x ]
     dir_bit= [x for x in  os.listdir(out_folder) if  ".bit" in x ]
-    print(dir_bit)
-    print(dir_hwh)
+    vprint(2)(dir_bit)
+    vprint(2)(dir_hwh)
 
     if len(dir_bit) != 1:
-        print("error")
+        vprint(2)("error")
         return
         
     if len(dir_bit) != 1:
-        print("error")
+        vprint(2)("error")
         return
     ouput_hwh = build_folder+basename +"/"+dir_bit[0][:-4] + ".hwh" 
     output_bit = build_folder+basename +"/"+dir_bit[0] 

@@ -1,4 +1,5 @@
 import pandas as pd
+from fmake.generic_helper import constants
 
 from time import sleep
 
@@ -49,9 +50,18 @@ class vhdl_file_io:
             
 
     def read_poll(self):
-        return int(get_content(self.write_poll_FileName).split("\n")[1].split(",")[1])
+        try:
+            txt = get_content(self.write_poll_FileName)
+            return int(txt.split("\n")[1].split(",")[1])
+        except:
+            print("read_poll:" , txt)
 
-
+    def reset(self):
+        set_content(self.poll_FileName, 0)
+        set_content(self.read_FileName, 0)
+        set_content(self.write_poll_FileName, "time, id\n 0 , 0")
+        set_content(self.write_FileName, "time, id\n 0 , 0")
+        
     def wait_for_index(self ,index ):
         for i in range(10000):
             try:
@@ -94,6 +104,7 @@ class vhdl_file_io:
         return df
     
     
-def text_io_query(entity, columns=None ):
-    FileName = "build/" + entity + "/text_io_polling"
+def text_io_query(entity, prefix = None,  columns=None ):
+    prefix = constants.text_IO_polling if prefix is None else prefix
+    FileName = "build/" + entity + "/" + prefix
     return vhdl_file_io(FileName, columns)

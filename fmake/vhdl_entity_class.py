@@ -116,7 +116,6 @@ def expand_types(ports):
 
 
 def set_default_value(ports):
-    #print(ports)
     def get_default_value(x):
         if x["default"]:
             return x["default"]

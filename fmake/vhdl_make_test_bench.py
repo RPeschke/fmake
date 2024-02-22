@@ -492,7 +492,7 @@ def make_test_bench_main(EntityName,NumberOfRows,OutputPath):
 
    #make_stand_alone_impl( entityDef = tb_maker.entetyCl , path =  OutputPath, suffix= "")
 
-    print("generated test bench file", tb_maker.get_test_bench_file_basename())
+    vprint(0)("generated test bench file", tb_maker.get_test_bench_file_basename())
     
 
 
@@ -509,7 +509,7 @@ def make_test_bench_main_wrap(x):
            
     URL = "https://github.com/RPeschke/fmake/raw/main/proto_build/empty_testbench.xlsm"
     response = wget.download(URL, args.OutputPath+"/" +args.entity+".xlsm")
-    print("\ndone make-testbench\n\n")
+    vprint(0)("\ndone make-testbench\n\n")
 
 add_programm("make-testbench", make_test_bench_main_wrap)   
 

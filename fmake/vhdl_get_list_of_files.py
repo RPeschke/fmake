@@ -1,6 +1,7 @@
 import os
 import fnmatch, re
-
+from fmake.generic_helper import  vprint
+from pathlib import Path
 
 
 
@@ -12,6 +13,10 @@ def getListOfFiles(dirName, Pattern = '*.*',CaseSensitive=False):
     listOfFile = os.listdir(dirName)
 
     allFiles = list()
+    file_path = Path(dirName + '/.fmakeignore')
+    if file_path.exists():
+        vprint(5)(".fmakeignore found in  ", dirName)
+        return allFiles
     # Iterate over all the entries
     for entry in listOfFile:
         # Create full path

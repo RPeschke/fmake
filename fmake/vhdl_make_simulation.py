@@ -7,6 +7,7 @@ from fmake.vhdl_dependency_db  import get_dependency_db
 
 
 from fmake.vhdl_programm_list import  add_programm
+from fmake.generic_helper import constants
 
 from fmake.generic_helper import  vprint, extract_cl_arguments
 
@@ -15,11 +16,21 @@ def vhdl_make_simulation_intern(entity,BuildFolder = "build/"):
     
     CSV_readFile=OutputPath+entity+".csv" 
     CSV_writeFile=OutputPath+entity+"_out.csv" 
+
     try_make_dir(OutputPath)
     
     save_file(CSV_readFile,"")
     save_file(CSV_writeFile,"")
     save_file(OutputPath+"clock_speed.txt","10")
+    
+    
+    save_file(OutputPath+ constants.text_IO_polling +"_poll.txt","0")
+    save_file(OutputPath+ constants.text_IO_polling +"_write_poll.txt",
+"""Time, N
+0,     0
+""")
+    save_file(OutputPath+ constants.text_IO_polling +"_read.txt","")
+    save_file(OutputPath+ constants.text_IO_polling +"_write.txt","")    
 
    
 
@@ -64,5 +75,7 @@ def vhdl_make_simulation_wrap(x):
     args = extract_cl_arguments(parser= parser,x=x)
     vprint(0)('Make-Simulation for Entity: ' , args.entity)
     vhdl_make_simulation(args.entity)
-
+    vprint(0)('Done Make-Simulation')
+    
+    
 add_programm("make-simulation", vhdl_make_simulation_wrap)

@@ -3,6 +3,10 @@ import pandas as pd
 import copy
 import argparse
 
+class constants:
+    text_IO_polling = "text_io_polling"
+
+
 class verbose_printer_cl:
     def __init__(self) -> None:
         self.level = 0
@@ -71,9 +75,9 @@ def try_make_dir(name,isRelativePath=True):
 
         os.mkdir(abs_name)
     except OSError:  
-        print ("Creation of the directory %s failed" % name)
+        vprint(1) ("Creation of the directory %s failed" % name)
     else:  
-        print ("Successfully created the directory %s " % name)
+        vprint(1) ("Successfully created the directory %s " % name)
 
 
 

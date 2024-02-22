@@ -126,8 +126,8 @@ def vhdl_make_implementation(Entity, UCF_file):
     
     
     IPcoreList = [x for x in IPcoreList if FileBaseNameNotInList(x, IPcoreList_in,0)]
-    print(IPcoreList)
-    print(IPcoreList_in)
+    vprint(1)(IPcoreList)
+    vprint(1)(IPcoreList_in)
     
     try_make_dir(outPath)
 
@@ -144,7 +144,7 @@ def vhdl_make_implementation(Entity, UCF_file):
     IPcoreList_in2_str = make_IPcoreList_in2_str(IPcoreList_in)
 
     
-    print(proto_Project)
+    vprint(1)(proto_Project)
 
     project_file_content = """
 {proto_Project}

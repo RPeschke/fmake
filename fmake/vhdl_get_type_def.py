@@ -1,7 +1,7 @@
 
 from  .vhdl_get_entity_def import  get_list
 from  .generic_helper import get_text_between_outtermost
-
+from fmake.generic_helper import  vprint 
 
 def vhdl_get_type_def_array(rawText):
     words = rawText.strip().split(" ")
@@ -38,7 +38,7 @@ def vhdl_get_type_def_record(rawText):
     try:
         rawText = rawText.split(" record ")[1]
     except:
-        print(rawText)
+        vprint(2)(rawText)
         raise
 
     lst = get_list("record ("+ rawText +")", "record")
@@ -87,6 +87,7 @@ def vhdl_get_type_def_from_string(FileContent):
         words = list(filter(None, words)) 
         if len(words)  > 1  and  "is" in words[1]:
             ret["name"] = words[0]
+            ret["vhdl_type"] = "not_used"
             if words[2]== 'array':
                 ret = vhdl_get_type_def_array(x)
             elif words[2]== 'record':
@@ -106,6 +107,7 @@ def vhdl_get_type_def_from_string(FileContent):
         words = list(filter(None, words)) 
         if len(words)  > 1  and  "is" in words[1]:
             ret["name"] = words[0]
+            ret["vhdl_type"] = "not_used"
             if words[2]== 'array':
                 ret = vhdl_get_type_def_array(x)
             elif words[2]== 'record':

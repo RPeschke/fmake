@@ -9,18 +9,19 @@ import argparse
 from fmake.vhdl_programm_list import add_programm
 from fmake.generic_helper import  extract_cl_arguments
 
+from fmake.generic_helper import  vprint
 
 def Convert2CSV(XlsFile,Sheet,OutputFile,drop):
     if XlsFile == "":
         return 
     data_xls = pd.read_excel(XlsFile, Sheet, index_col=None)
-    print(data_xls.columns)
+    vprint(1)(data_xls.columns)
     for d in drop:
         try:
             data_xls.drop(d, axis=1, inplace=True)
         except:
             pass
-            print("unable to drop column",d)
+            vprint(0)("unable to drop column",d)
     data_xls.to_csv(OutputFile, encoding='utf-8',index =False, sep=" ") 
     
     
@@ -44,8 +45,8 @@ def excel_to_csv_wrap(x):
     parser.add_argument('--OutputCSV',    help='Path to the output',default="test.csv")
     args = extract_cl_arguments(parser , x)
     
-    print("\nargs.InputXLS: ",args.InputXLS,"\nargs.SheetXLS",args.SheetXLS,"\nargs.OutputCSV",args.OutputCSV)
+    vprint(2)("\nargs.InputXLS: ",args.InputXLS,"\nargs.SheetXLS",args.SheetXLS,"\nargs.OutputCSV",args.OutputCSV)
     Convert2CSV_args(args, args.OutputCSV)
-    print("done Converting")
+    vprint(1)("done Converting")
 
 add_programm("excel2csv", excel_to_csv_wrap)    

@@ -51,8 +51,8 @@ def vivado_run(args):
     quit123 =  "" if args.run_with_gui else "quit"               
             ))
 
-    
-    cmd = """cd build/{entity_name}  && {vivado_path} && xelab  {entity_name} -prj  {entity_name}.prj --debug all && xsim work.{entity_name}  -t run.tcl  {gui}""".format(
+    vivado_path = " && " + vivado_path if vivado_path != "" else ""
+    cmd = """cd build/{entity_name}  {vivado_path} && xelab  {entity_name} -prj  {entity_name}.prj --debug all && xsim work.{entity_name}  -t run.tcl  {gui}""".format(
         entity_name = entity_name ,  
         vivado_path = vivado_path,
         gui = "-gui" if args.run_with_gui else "" 

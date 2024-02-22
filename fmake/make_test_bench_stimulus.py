@@ -79,7 +79,7 @@ def write_csv_file(df,entity, event_axis ,empty_rows ):
 def make_input_file(entity, file_list ,branch , event_axis ,empty_rows):
 
     fileList = get_dependency_db().get_dependencies(entity)
-    print(fileList[0])
+    vprint(1)(fileList[0])
     df = make_input_table(fileList[0])
     df = df.rename(columns=lambda x: x.strip())
 

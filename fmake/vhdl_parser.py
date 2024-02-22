@@ -13,7 +13,7 @@ from .vhdl_load_file_without_comments import load_file_witout_comments
 
 from .generic_helper import get_text_between_outtermost
 
-
+from fmake.generic_helper import  vprint
 
 
 
@@ -77,6 +77,8 @@ def vhdl_parser_types(FileName, ret1):
         elif x["vhdl_type"] == "subtype":
             basetype,direction,first,second =  extract_baseType(x["BaseType"])
             ret1["records"].extend(  [ [ FileName ,  x["vhdl_type"], x["name"],x["BaseType"],"",basetype,direction,first,second ]  ]  )                 
+        elif x["vhdl_type"] == "not_used":
+            pass
         else:
             raise Exception("Unknown type")
 
@@ -108,7 +110,7 @@ def vhdl_parser_constants(FileName, ret1):
         try:
             ret1["constants"].extend(  [ [ FileName ,  sp[0].strip() , sp[1].strip(), sp[2][1:].strip() ]  ]  )
         except:
-            print("Error in reading constants in file: " + FileName, "\nline: "+ x + "\nsp: ", sp)
+            vprint(2)("Error in reading constants in file: " + FileName, "\nline: "+ x + "\nsp: ", sp)
     
             
 def vhdl_parser(FileName, ret1={}):
@@ -189,20 +191,25 @@ def vhdl_parse_folder( Folder = ".", verbose = False):
         "records": [],
         "constants": []
     }
-    if verbose:    
-        print ( '<vhdl_parse_folder FolderName="'+ Folder +'">')
-    if verbose:    
-        print ( '  <getListOfFiles> ')
+      
+    vprint(1)( '<vhdl_parse_folder FolderName="'+ Folder +'">')
+   
+    vprint(1) ( '  <getListOfFiles> ')
+    
     flist = getListOfFiles(Folder,"*.vhd")
-    if verbose:    
-        print ( '  </getListOfFiles> ')
+    
+    vprint(1)( '  </getListOfFiles> ')
 
     for f in flist:
 
-        if verbose:    
-            print("process file: ",f)
+         
+        vprint(1)("process file: ",f)
         
-        vhdl_parser(f,ret1)
+        try:
+            vhdl_parser(f,ret1)
+        except:
+            vprint(1)("Error in file: ", f)
+            
 
     flist = getListOfFiles(Folder,"*.xco*")
     for f in flist:
@@ -216,8 +223,9 @@ def vhdl_parse_folder( Folder = ".", verbose = False):
      
     df_records = pd.DataFrame(ret1["records"], columns = ["FileName" ,  "vhdl_type", "top_name","sub_type" ,"sub_name" ,"basetype" ,"direction" ,"first" ,"second" ])
     df_constants = pd.DataFrame(ret1["constants"], columns = ["FileName" ,   "constant_name", "top_name" ,"default" ])
-    if verbose:    
-        print ( '</vhdl_parse_folder>')
+     
+    vprint(1) ( '</vhdl_parse_folder>')
+    
     return df,df_records,df_constants
 
 

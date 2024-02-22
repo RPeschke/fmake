@@ -4,6 +4,8 @@ from .vhdl_parser import vhdl_parse_folder
 
 
 from .generic_helper import save_file, try_make_dir,  first_diff_between_strings
+from fmake.generic_helper import  vprint
+
 
 class dependency_db_cl:
     def __init__(self,FileName) -> None:
@@ -58,8 +60,8 @@ class dependency_db_cl:
             df_new_entities_old = pd.merge(df_used, df_fileNames, on="filename")
             df_new_entities_new = pd.merge(df_def, df_new_entities_old, how="right", on="name")
             if len(df_new_entities_new[df_new_entities_new.filename_x.isna()].name):
-                print("unable to find entity:")
-                print(df_new_entities_new[df_new_entities_new.filename_x.isna()].name)
+                vprint(1)("unable to find entity:")
+                vprint(1)(df_new_entities_new[df_new_entities_new.filename_x.isna()].name)
                 
             df_new_entities_new = df_new_entities_new[~df_new_entities_new.filename_x.isna()]
             
