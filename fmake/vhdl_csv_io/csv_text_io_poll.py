@@ -1,5 +1,7 @@
 csv_text_io_poll = """
 
+
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -85,6 +87,10 @@ begin
                 end if;
                 if  Rows_index(0) = -1 then 
                     assert false report "Test: OK" severity failure;
+                elsif  Rows_index(0) = -2 then 
+                    reopen_file_write <= '1';
+                    reopen_Rows_write_poll <= '1';
+                    i_state <= s_write_poll;
                 elsif  Rows_index(0) > last_index then 
                     last_index <= Rows_index(0);
                     reopen_file <= '1';
@@ -181,6 +187,7 @@ u_poll_write_file : entity work.csv_write_file
     );
 
 end architecture;
+
 
 
 """

@@ -1,7 +1,10 @@
 import pandas as pd
 from fmake.generic_helper import constants
-
+from fmake.generic_helper import  verbose_printer_cl
+	
 from time import sleep
+
+vprint = verbose_printer_cl()
 
 def get_content(filename):
     for _ in range(10000):
@@ -48,13 +51,15 @@ class vhdl_file_io:
             set_content(self.write_poll_FileName, "time, id\n 0 , 0")
             set_content(self.write_FileName, "time, id\n 0 , 0")
             
-
+    def set_verbosity(self, level):
+        vprint.level = level
+        
     def read_poll(self):
         try:
             txt = get_content(self.write_poll_FileName)
             return int(txt.split("\n")[1].split(",")[1])
         except:
-            print("read_poll:" , txt)
+            vprint(11)("read_poll:" , txt)
 
     def reset(self):
         set_content(self.poll_FileName, 0)
@@ -62,14 +67,22 @@ class vhdl_file_io:
         set_content(self.write_poll_FileName, "time, id\n 0 , 0")
         set_content(self.write_FileName, "time, id\n 0 , 0")
         
+        set_content(self.poll_FileName, -2)
+        sleep(1)     
+        set_content(self.poll_FileName, 0)
+        sleep(1)  
+        
+        
     def wait_for_index(self ,index ):
         for i in range(10000):
             try:
-                if self.read_poll() ==  index:
+                ret = self.read_poll()
+                if ret  ==  index:
                     return True
+
             except: 
                 pass
-
+        vprint(10)("wait_for_index: Expected index:", index, " received index:", ret)
         return False
     
     def write_file(self, df):
@@ -92,7 +105,7 @@ class vhdl_file_io:
         set_content(self.poll_FileName, index )
         
         if not self.wait_for_index(index):
-            print("error", self.read_poll() , index)
+            vprint(0)("query: error: Index read: ", self.read_poll() , " 	Index Expected: ", index)
     
         return self.read_file()
     
