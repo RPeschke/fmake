@@ -3,7 +3,7 @@
 ret=[]
 
 
-def add_programm(name, function):
+def add_program(name, function):
     ret.append({"name": name, "func": function})
     
 def get_function(name):

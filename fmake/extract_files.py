@@ -2,11 +2,11 @@ import zipfile
 
 import shutil
 import os
-from  fmake.vhdl_programm_list           import add_programm 
-from  fmake.generic_helper               import  vprint, extract_cl_arguments
+from  fmake.vhdl_programm_list           import add_program 
+from  fmake.generic_helper               import  vprint, extract_cl_arguments, constants
 import argparse
 
-build_folder = "build/"
+build_folder = constants.default_build_folder
 
 def extract_bitfiles(in_zip_file, ouput_path = None):
     basename = os.path.basename(in_zip_file) 
@@ -55,6 +55,6 @@ def extract_bitfiles_wrap(x):
     
 
 
-add_programm("extract-xsa", extract_bitfiles_wrap)   
+add_program("extract-xsa", extract_bitfiles_wrap)   
     
       

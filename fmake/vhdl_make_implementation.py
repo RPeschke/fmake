@@ -1,8 +1,8 @@
 from fmake.generic_helper import try_make_dir, save_file, try_load_file,load_file, cl_add_entity
 from  fmake.vhdl_make_simulation import vhdl_make_simulation
 from fmake.vhdl_get_list_of_files import getListOfFiles
-from fmake.vhdl_programm_list import  add_programm
-from fmake.generic_helper import  vprint, extract_cl_arguments
+from fmake.vhdl_programm_list import  add_program
+from fmake.generic_helper import  vprint, extract_cl_arguments, constants
 
 from fmake.makeise.makeise import do_makeise
 
@@ -29,7 +29,7 @@ def get_proto_project(build_path, Entity):
     proto_Project = build_path+"/"+Entity + "/" +Entity + "_proto_Project.in"
     f = try_load_file(proto_Project)
     if f is None:
-        URL = "https://raw.githubusercontent.com/RPeschke/fmake/main/proto_build/proto_Project.in"
+        URL =constants.proto_Project_url
         response = wget.download(URL, proto_Project)
         f = load_file(proto_Project)
         
@@ -40,7 +40,7 @@ def get_template( simpleTemplate_path ):
     
     f = try_load_file(simpleTemplate_path)
     if f is None:
-        URL = "https://raw.githubusercontent.com/RPeschke/fmake/main/proto_build/simpleTemplate.xise.in"
+        URL = constants.xise_prototype_url
         response = wget.download(URL, simpleTemplate_path)
 
    
@@ -98,7 +98,7 @@ def copy_ipcore_file(IPcoreList, build_path, outPath):
 
     
 def vhdl_make_implementation(Entity, UCF_file):
-    build_path =  "build/"
+    build_path =  constants.default_build_folder
   
     Entity_build_path = build_path+  Entity +"/"
     project_file_path = Entity_build_path + Entity+ ".prj"
@@ -218,4 +218,4 @@ def vhdl_make_implementation_wrap(x):
     do_makeise( inputfile , xise_file_path)
     
 
-add_programm("make-implementation", vhdl_make_implementation_wrap)
+add_program("make-implementation", vhdl_make_implementation_wrap)

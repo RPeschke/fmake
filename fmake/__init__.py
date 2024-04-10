@@ -16,6 +16,9 @@ import fmake.make_test_bench_stimulus
 
 import fmake.vhdl_make_implementation
 
+import fmake.export_registers_from_csv
+
+
 from fmake.text_io_query import text_io_query
 
 

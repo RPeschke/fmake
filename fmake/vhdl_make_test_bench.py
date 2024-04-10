@@ -8,8 +8,8 @@ from  fmake.vhdl_dependency_db           import get_dependency_db
 from  fmake.vhdl_entity_class            import vhdl_entity
 from  fmake.vhdl_merge_split_test_cases  import merge_test_case
 from  fmake.generic_helper               import save_file, try_make_dir, cl_add_entity, join_str
-from  fmake.vhdl_programm_list           import add_programm 
-from  fmake.generic_helper               import vprint, extract_cl_arguments
+from  fmake.vhdl_programm_list           import add_program 
+from  fmake.generic_helper               import vprint, extract_cl_arguments, constants
 
 import argparse
 import numpy as np 
@@ -507,9 +507,9 @@ def make_test_bench_main_wrap(x):
     args = extract_cl_arguments(parser= parser,x=x)
     make_test_bench_main(args.entity,args.NumberOfRows, args.OutputPath)
            
-    URL = "https://github.com/RPeschke/fmake/raw/main/proto_build/empty_testbench.xlsm"
+    URL = constants.empty_testbench_xlsm_URL
     response = wget.download(URL, args.OutputPath+"/" +args.entity+".xlsm")
     vprint(0)("\ndone make-testbench\n\n")
 
-add_programm("make-testbench", make_test_bench_main_wrap)   
+add_program("make-testbench", make_test_bench_main_wrap)   
 

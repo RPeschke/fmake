@@ -4,8 +4,17 @@ import copy
 import argparse
 
 class constants:
-    text_IO_polling = "text_io_polling"
+    text_IO_polling = "text_io_query"
+    text_io_polling_send_lock_txt    = "send_lock.txt"
+    text_io_polling_send_txt         = "send.txt"
+    text_io_polling_receive_txt      = "receive.txt"
+    text_io_polling_receive_lock_txt = "receive_lock.txt"
 
+    default_build_folder = "build/"
+    fmake_filename = "fmake.txt"
+    proto_Project_url  =  "https://raw.githubusercontent.com/RPeschke/fmake/main/proto_build/proto_Project.in"
+    xise_prototype_url =  "https://raw.githubusercontent.com/RPeschke/fmake/main/proto_build/simpleTemplate.xise.in"
+    empty_testbench_xlsm_URL = "https://github.com/RPeschke/fmake/raw/main/proto_build/empty_testbench.xlsm"
 
 class verbose_printer_cl:
     def __init__(self) -> None:
@@ -234,3 +243,12 @@ def join_str(content, start="",end="",LineEnding="",Delimeter="",LineBeginning="
     return ret
 
 
+def get_build_directory():
+    prefix = ""
+    fmake_file = constants.default_build_folder+"/"+constants.fmake_filename
+    for i in range(100):
+        if os.path.isfile(prefix+fmake_file):
+            return os.path.abspath(prefix+ constants.default_build_folder + "/")
+        prefix+="../"
+
+    raise Exception("unable to find build directory")

@@ -3,13 +3,13 @@ import numpy as np
 import uproot
 import argparse
 
-from fmake.vhdl_programm_list import add_programm
+from fmake.vhdl_programm_list import add_program
 import fmake.vhdl_load_file_without_comments as ld
 from fmake.vhdl_dependency_db import  get_dependency_db
 
 from  fmake.generic_helper               import save_file, try_make_dir, cl_add_entity, join_str
-from  fmake.vhdl_programm_list           import add_programm 
-from  fmake.generic_helper               import  vprint, extract_cl_arguments
+from  fmake.vhdl_programm_list           import add_program 
+from  fmake.generic_helper               import  vprint, extract_cl_arguments , constants
 
 
 
@@ -58,7 +58,7 @@ def write_csv_file(df,entity, event_axis ,empty_rows ):
     df = df.astype(int)
     empty_block = make_empty_rows(df, empty_rows)
     
-    with open("build/" + entity +"/"+ entity +".csv" ,"w" ) as f:
+    with open( constants.default_build_folder + entity +"/"+ entity +".csv" ,"w" ) as f:
         line = ""
         for c in df.columns:
             line += c + " "
@@ -108,4 +108,4 @@ def make_input_file_wrap(x):
     
     make_input_file(    entity  = args.entity , file_list = args.filelist , branch = args.branch, event_axis=args.event_axis ,empty_rows = int(args.empty_rows))
 
-add_programm("make-stimulus",make_input_file_wrap )
+add_program("make-stimulus",make_input_file_wrap )

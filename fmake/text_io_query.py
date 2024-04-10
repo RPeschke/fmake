@@ -1,8 +1,11 @@
 import pandas as pd
-from fmake.generic_helper import constants
-from fmake.generic_helper import  verbose_printer_cl
-	
+import os.path
 from time import sleep
+
+
+from fmake.generic_helper import constants
+from fmake.generic_helper import verbose_printer_cl 
+from fmake.generic_helper import get_build_directory
 
 vprint = verbose_printer_cl()
 
@@ -34,42 +37,54 @@ def to_dataframe(x):
         return pd.DataFrame(x)
 
 class vhdl_file_io:
-    def __init__(self, FileName , columns=None):
+    def __init__(self, path , columns=None):
         self.columns = columns
-        self.FileName = FileName
-        
-        self.poll_FileName = FileName + "_poll.txt"
-        self.read_FileName =  FileName + "_read.txt"
-        self.write_FileName = FileName + "_write.txt"
-        self.write_poll_FileName  = FileName + "_write_poll.txt"
+        self.path = path
+
+        if not os.path.exists(path):
+            os.mkdir(path)
+
+        self.send_lock_FileName     = path + "/"+ constants.text_io_polling_send_lock_txt 
+        self.send_FileName          = path + "/"+ constants.text_io_polling_send_txt 
+        self.receive_FileName       = path + "/"+ constants.text_io_polling_receive_txt 
+        self.receive_lock_FileName  = path + "/"+ constants.text_io_polling_receive_lock_txt 
+
+        vprint(10)("self.columns:               ", self.columns)
+        vprint(10)("self.FileName:              ", self.path)
+        vprint(10)("self.send_lock_FileName:    ", self.send_lock_FileName)
+        vprint(10)("self.send_FileName:         ", self.send_FileName)
+        vprint(10)("self.receive_FileName:      ", self.receive_FileName)
+        vprint(10)("self.receive_lock_FileName: ", self.receive_lock_FileName)
         try:
-            index =int( get_content(self.poll_FileName))
+            index =int( get_content(self.send_lock_FileName))
         except:
             index = 0
-            set_content(self.poll_FileName, 0)
-            set_content(self.read_FileName, 0)
-            set_content(self.write_poll_FileName, "time, id\n 0 , 0")
-            set_content(self.write_FileName, "time, id\n 0 , 0")
+            vprint(10)("vhdl_file_io.__init__: except")
+            vprint(10)(self.send_lock_FileName)
+            set_content(self.send_lock_FileName, 0)
+            set_content(self.send_FileName, 0)
+            set_content(self.receive_lock_FileName, "time, id\n 0 , 0")
+            set_content(self.receive_FileName, "time, id\n 0 , 0")
             
     def set_verbosity(self, level):
         vprint.level = level
         
     def read_poll(self):
         try:
-            txt = get_content(self.write_poll_FileName)
+            txt = get_content(self.receive_lock_FileName)
             return int(txt.split("\n")[1].split(",")[1])
         except:
             vprint(11)("read_poll:" , txt)
 
     def reset(self):
-        set_content(self.poll_FileName, 0)
-        set_content(self.read_FileName, 0)
-        set_content(self.write_poll_FileName, "time, id\n 0 , 0")
-        set_content(self.write_FileName, "time, id\n 0 , 0")
+        set_content(self.send_lock_FileName, 0)
+        set_content(self.send_FileName, 0)
+        set_content(self.receive_lock_FileName, "time, id\n 0 , 0")
+        set_content(self.receive_FileName, "time, id\n 0 , 0")
         
-        set_content(self.poll_FileName, -2)
+        set_content(self.send_lock_FileName, -2)
         sleep(1)     
-        set_content(self.poll_FileName, 0)
+        set_content(self.send_lock_FileName, 0)
         sleep(1)  
         
         
@@ -87,14 +102,14 @@ class vhdl_file_io:
     
     def write_file(self, df):
         if self.columns is not None:
-            df[self.columns ].to_csv(self.read_FileName, sep = " ", index = False)
+            df[self.columns ].to_csv(self.send_FileName, sep = " ", index = False)
         else :
-            df.to_csv(self.read_FileName, sep = " ", index = False)
+            df.to_csv(self.send_FileName, sep = " ", index = False)
             
     def stop(self):
-        set_content(self.poll_FileName, -1 )  
+        set_content(self.send_lock_FileName, -1 )  
         sleep(1)      
-        set_content(self.poll_FileName, 0 )  
+        set_content(self.send_lock_FileName, 0 )  
         
         
     def query(self , df):
@@ -102,7 +117,7 @@ class vhdl_file_io:
         
         self.write_file(df)
         index = self.read_poll() + 1   
-        set_content(self.poll_FileName, index )
+        set_content(self.send_lock_FileName, index )
         
         if not self.wait_for_index(index):
             vprint(0)("query: error: Index read: ", self.read_poll() , " 	Index Expected: ", index)
@@ -112,12 +127,14 @@ class vhdl_file_io:
         
     def read_file(self):
         
-        df = pd.read_csv(self.write_FileName)
+        df = pd.read_csv(self.receive_FileName)
         df.columns = df.columns.str.replace(' ', '')
         return df
     
-    
-def text_io_query(entity, prefix = None,  columns=None ):
+
+
+def text_io_query(entity, prefix = None,  columns=None, build = None ):
     prefix = constants.text_IO_polling if prefix is None else prefix
-    FileName = "build/" + entity + "/" + prefix
-    return vhdl_file_io(FileName, columns)
+    build =  build if build  else get_build_directory()
+    path = build + "/" +  entity + "/" + prefix
+    return vhdl_file_io(path, columns)

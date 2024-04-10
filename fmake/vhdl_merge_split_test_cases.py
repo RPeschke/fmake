@@ -6,7 +6,7 @@ import pandas as pd
 
 from .generic_helper import load_file, save_file
 import argparse
-from fmake.vhdl_programm_list import add_programm
+from fmake.vhdl_programm_list import add_program
 
 
 def Convert2CSV(XlsFile,Sheet,OutputFile):
@@ -61,7 +61,7 @@ def merge_test_case_wrap(x):
         merge_test_case(args.InputTestCase)
     
 
-add_programm("merge-testcase", merge_test_case_wrap)    
+add_program("merge-testcase", merge_test_case_wrap)    
 
     
 
@@ -90,7 +90,7 @@ def split_test_case_wrap(x):
 
     split_test_case(args.testcase)
     
-add_programm("split-testcase", split_test_case_wrap)    
+add_program("split-testcase", split_test_case_wrap)    
 
 
     

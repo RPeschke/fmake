@@ -3,10 +3,10 @@ import os
 import shutil 
 import platform
 
-from fmake.vhdl_programm_list import add_programm
+from fmake.vhdl_programm_list import add_program
 
 from fmake.generic_helper import  vprint, try_remove_file , save_file , load_file 
-from fmake.generic_helper import extract_cl_arguments, cl_add_entity , cl_add_OutputCSV, cl_add_gui , cl_add_run_infinitly
+from fmake.generic_helper import extract_cl_arguments, cl_add_entity , cl_add_OutputCSV, cl_add_gui , cl_add_run_infinitly, constants
 
 from fmake.Convert2CSV import Convert2CSV , Convert2CSV_add_CL_args
 
@@ -14,7 +14,7 @@ from fmake.Convert2CSV import Convert2CSV , Convert2CSV_add_CL_args
 
 def make_tcl_file(entity_name, intermediate_csv,tcl_file, do_quit = "" , run_infinitly = False):
     onerror = '{' +'resume}'
-    clock_speed_file= "build/"+entity_name+"/"+"clock_speed.txt"
+    clock_speed_file= constants.default_build_folder +"/" +entity_name+"/"+"clock_speed.txt"
     clock_speed=int(load_file(clock_speed_file))
     line_count=0
     try:
@@ -41,7 +41,7 @@ def run_in_bash(cmd):
 
 def run_ise(entity_name, input_xls, Sheet, ouput_csv, drop,ise_path, Run_with_gui = False ,run_infinitly = False ):
     ise_path = load_file( ise_path  ).strip()
-    build_path = "build/"+entity_name+"/"
+    build_path = constants.default_build_folder+"/" +entity_name+"/"
     intermediate_csv = build_path + entity_name+ ".csv"
     programm_name = entity_name+".exe"
     project_name = entity_name+".prj"
@@ -94,7 +94,7 @@ def run_ise_wrap(x):
     cl_add_OutputCSV(parser)
     cl_add_gui(parser=parser)
     cl_add_run_infinitly(parser=parser)
-    parser.add_argument('--ise_path', help='Path to the vivado settings64.bat file',default="build/ise_path.txt")
+    parser.add_argument('--ise_path', help='Path to the vivado settings64.bat file',default= constants.default_build_folder + "/ise_path.txt")
 
     Convert2CSV_add_CL_args(parser)
     
@@ -102,4 +102,4 @@ def run_ise_wrap(x):
     
     run_ise(entity_name=args.entity, input_xls=args.InputXLS, Sheet=args.SheetXLS, ouput_csv=args.OutputCSV, drop = args.Drop , Run_with_gui= args.run_with_gui, ise_path = args.ise_path, run_infinitly = args.run_infinitly)
     
-add_programm("run-ise", run_ise_wrap )
+add_program("run-ise", run_ise_wrap )

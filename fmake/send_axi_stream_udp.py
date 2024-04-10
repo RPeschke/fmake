@@ -2,7 +2,7 @@ import argparse
 import os
 
 
-from fmake.vhdl_programm_list import add_programm
+from fmake.vhdl_programm_list import add_program
 
 from fmake.generic_helper import  vprint, try_remove_file , save_file , load_file 
 from fmake.generic_helper import extract_cl_arguments, cl_add_entity , cl_add_OutputCSV, cl_add_gui
@@ -188,4 +188,4 @@ def send_udp_wrap(x):
     
     
     
-add_programm("send-udp", send_udp_wrap )
+add_program("send-udp", send_udp_wrap )

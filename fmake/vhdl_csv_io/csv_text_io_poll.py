@@ -1,3 +1,5 @@
+from fmake.generic_helper import constants
+
 csv_text_io_poll = """
 
 
@@ -12,7 +14,7 @@ use STD.textio.all;
 
 entity csv_text_io_poll is 
 generic (
-    FileName : string := "text_io_polling";
+    FileName : string := "{text_io_query}";
     read_NUM_COL : integer := 3;
     write_NUM_COL : integer := 3;
     HeaderLines : string := "x,y,z"
@@ -30,11 +32,11 @@ end entity;
 
 architecture rtl of csv_text_io_poll is
 
-    constant poll_FileName : string       := FileName & "_poll.txt";
-    constant read_FileName : string       := FileName & "_read.txt";
+    constant send_lock_FileName    : string    := FileName & "{send_lock}";
+    constant send_FileName         : string    := FileName & "{send}";
     
-    constant write_FileName : string      := FileName & "_write.txt";
-    constant write_poll_FileName : string := FileName & "_write_poll.txt";
+    constant receive_FileName      : string    := FileName & "{receive}";
+    constant receive_lock_FileName : string    := FileName & "{receive_lock}";
 
     type state_t is (s_idle, s_read,s_write,  s_write_poll, s_done );
     signal i_state : state_t := s_idle;
@@ -130,7 +132,7 @@ begin
 
     index_reader : entity work.csv_read_file
         generic map(
-            FileName => poll_FileName,
+            FileName => send_lock_FileName,
             NUM_COL => NUM_COL_index,
             HeaderLines => 0
             ) port map (
@@ -145,7 +147,7 @@ begin
 
     csv_r : entity work.csv_read_file
         generic map(
-            FileName => read_FileName,
+            FileName => send_FileName,
             NUM_COL => read_NUM_COL,
             HeaderLines => 1
             ) port map (
@@ -160,7 +162,7 @@ begin
 
 u_csv_write_file : entity work.csv_write_file
     generic map(
-            FileName => write_FileName,
+            FileName => receive_FileName,
             NUM_COL => write_NUM_COL,
             HeaderLines =>  HeaderLines
         ) port map (
@@ -174,7 +176,7 @@ u_csv_write_file : entity work.csv_write_file
 
 u_poll_write_file : entity work.csv_write_file
     generic map(
-            FileName => write_poll_FileName,
+            FileName => receive_lock_FileName,
             NUM_COL => 1,
             HeaderLines =>  HeaderLines
         ) port map (
@@ -190,4 +192,10 @@ end architecture;
 
 
 
-"""
+""".format(
+    text_io_query = constants.text_IO_polling,
+    send_lock     = "/"+ constants.text_io_polling_send_lock_txt,
+    send          = "/"+ constants.text_io_polling_send_txt,
+    receive       = "/"+ constants.text_io_polling_receive_txt, 
+    receive_lock  = "/"+ constants.text_io_polling_receive_lock_txt 
+)

@@ -6,7 +6,7 @@ import pandas as pd
 
 
 import argparse
-from fmake.vhdl_programm_list import add_programm
+from fmake.vhdl_programm_list import add_program
 from fmake.generic_helper import  extract_cl_arguments
 
 from fmake.generic_helper import  vprint
@@ -49,4 +49,4 @@ def excel_to_csv_wrap(x):
     Convert2CSV_args(args, args.OutputCSV)
     vprint(1)("done Converting")
 
-add_programm("excel2csv", excel_to_csv_wrap)    
+add_program("excel2csv", excel_to_csv_wrap)    

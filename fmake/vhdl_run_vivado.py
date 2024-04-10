@@ -4,12 +4,12 @@ import shutil
 import pandas as pd
 import argparse
 
-from fmake.vhdl_programm_list import add_programm
+from fmake.vhdl_programm_list import add_program
 
 from fmake.generic_helper import  vprint, try_remove_file , save_file , load_file 
 
 
-from fmake.generic_helper import extract_cl_arguments, cl_add_entity ,cl_add_OutputCSV, cl_add_gui
+from fmake.generic_helper import extract_cl_arguments, cl_add_entity ,cl_add_OutputCSV, cl_add_gui, constants
 
 from fmake.Convert2CSV import Convert2CSV , Convert2CSV_add_CL_args 
 
@@ -22,7 +22,8 @@ def vivado_run(args):
     vivado_path = load_file(args.vivado_path)
     vprint.level = int( args.verbosity)
     entity_name =  args.entity
-    path =   "build/" +entity_name+"/"
+    
+    path =  constants.default_build_folder +"/" +entity_name+"/"
     intermediate_csv = path + entity_name + ".csv"
     clock_speed = load_file( path +"/clock_speed.txt"  )
     clock_speed = int(clock_speed)
@@ -52,7 +53,8 @@ def vivado_run(args):
             ))
 
     vivado_path = " && " + vivado_path if vivado_path != "" else ""
-    cmd = """cd build/{entity_name}  {vivado_path} && xelab  {entity_name} -prj  {entity_name}.prj --debug all && xsim work.{entity_name}  -t run.tcl  {gui}""".format(
+    cmd = """cd {build}/{entity_name}  {vivado_path} && xelab  {entity_name} -prj  {entity_name}.prj --debug all && xsim work.{entity_name}  -t run.tcl  {gui}""".format(
+        build = constants.default_build_folder,
         entity_name = entity_name ,  
         vivado_path = vivado_path,
         gui = "-gui" if args.run_with_gui else "" 
@@ -77,13 +79,13 @@ def vivado_run_wrap(x):
     cl_add_OutputCSV(parser)
     cl_add_gui(parser=parser)
     
-    parser.add_argument('--vivado_path', help='Path to the vivado settings64.bat file',default="build/vivado_path.txt")
+    parser.add_argument('--vivado_path', help='Path to the vivado settings64.bat file',default= constants.default_build_folder + "/vivado_path.txt")
     args = extract_cl_arguments(parser, x)
 
     vivado_run(args= args)
     
 
-add_programm("run-vivado", vivado_run_wrap)
+add_program("run-vivado", vivado_run_wrap)
 
 
     

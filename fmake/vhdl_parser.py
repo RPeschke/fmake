@@ -1,4 +1,4 @@
-from asyncio import constants
+
 import os
 
 import pandas as pd
@@ -7,11 +7,11 @@ from .vhdl_get_list_of_files import getListOfFiles
 
 
 
-from .vhdl_get_type_def import vhdl_get_type_def_from_string
+from fmake.vhdl_get_type_def import vhdl_get_type_def_from_string
 
-from .vhdl_load_file_without_comments import load_file_witout_comments
+from fmake.vhdl_load_file_without_comments import load_file_witout_comments
 
-from .generic_helper import get_text_between_outtermost
+from fmake.generic_helper import get_text_between_outtermost, constants
 
 from fmake.generic_helper import  vprint
 
@@ -213,7 +213,7 @@ def vhdl_parse_folder( Folder = ".", verbose = False):
 
     flist = getListOfFiles(Folder,"*.xco*")
     for f in flist:
-        if "build/" not in f:
+        if constants.default_build_folder  not in f:
             vhdl_parse_xco(f,ret1)
 
     

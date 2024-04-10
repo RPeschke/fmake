@@ -6,12 +6,12 @@ from fmake.generic_helper import try_make_dir,save_file,load_file, cl_add_entity
 from fmake.vhdl_dependency_db  import get_dependency_db
 
 
-from fmake.vhdl_programm_list import  add_programm
+from fmake.vhdl_programm_list import  add_program
 from fmake.generic_helper import constants
 
 from fmake.generic_helper import  vprint, extract_cl_arguments
 
-def vhdl_make_simulation_intern(entity,BuildFolder = "build/"):  
+def vhdl_make_simulation_intern(entity,BuildFolder = constants.default_build_folder ):  
     OutputPath = BuildFolder + entity + "/"
     
     CSV_readFile=OutputPath+entity+".csv" 
@@ -23,14 +23,17 @@ def vhdl_make_simulation_intern(entity,BuildFolder = "build/"):
     save_file(CSV_writeFile,"")
     save_file(OutputPath+"clock_speed.txt","10")
     
+    try_make_dir(OutputPath+ constants.text_IO_polling)
     
-    save_file(OutputPath+ constants.text_IO_polling +"_poll.txt","0")
-    save_file(OutputPath+ constants.text_IO_polling +"_write_poll.txt",
+
+
+    save_file(OutputPath+ constants.text_IO_polling +"/"+ constants.text_io_polling_send_lock_txt ,"0")
+    save_file(OutputPath+ constants.text_IO_polling +"/"+ constants.text_io_polling_receive_lock_txt ,
 """Time, N
 0,     0
 """)
-    save_file(OutputPath+ constants.text_IO_polling +"_read.txt","")
-    save_file(OutputPath+ constants.text_IO_polling +"_write.txt","")    
+    save_file(OutputPath+ constants.text_IO_polling + "/"+ constants.text_io_polling_send_txt,    "")
+    save_file(OutputPath+ constants.text_IO_polling + "/"+ constants.text_io_polling_receive_txt ,"")    
 
    
 
@@ -55,7 +58,7 @@ def extract_header_from_top_file(Entity, FileName,BuildFolder):
     vprint(1)("=======Done Extracting Header From File====")
 
 
-def vhdl_make_simulation(Entity,BuildFolder = "build/"):
+def vhdl_make_simulation(Entity,BuildFolder = constants.default_build_folder):
 
 
     fileList = get_dependency_db().get_dependencies_and_make_project_file(Entity)
@@ -78,4 +81,4 @@ def vhdl_make_simulation_wrap(x):
     vprint(0)('Done Make-Simulation')
     
     
-add_programm("make-simulation", vhdl_make_simulation_wrap)
+add_program("make-simulation", vhdl_make_simulation_wrap)
