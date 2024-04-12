@@ -38,8 +38,8 @@ architecture rtl of csv_text_io_poll is
     constant receive_FileName      : string    := FileName & "{receive}";
     constant receive_lock_FileName : string    := FileName & "{receive_lock}";
 
-    type state_t is (s_idle, s_read,s_write,  s_write_poll, s_done );
-    signal i_state : state_t := s_idle;
+    type state_t is (s_idle, s_read,s_write,  s_write_poll, s_done , s_reset );
+    signal i_state : state_t := s_reset;
 
     signal last_index : integer := 0;
 
@@ -64,6 +64,9 @@ architecture rtl of csv_text_io_poll is
     signal reopen_Rows_write_poll : std_logic := '0';
     signal done_Rows_write_poll : std_logic := '0';
 
+
+    signal i_write_Rows_valid : std_logic := '0';
+    signal i_write_Rows_valid1 : std_logic := '0';
 begin
 
 
@@ -117,7 +120,12 @@ begin
             when s_done =>
                 done_Rows_write_poll <= '1';
                 i_state <= s_idle;
-                
+            
+            when s_reset => 
+                last_index <= 0;
+                i_write_Rows_valid <= '1';
+                i_state <= s_write_poll;
+
             end case;
             
 
@@ -160,6 +168,9 @@ begin
         );
     read_Rows_valid <= valid;
 
+    
+    i_write_Rows_valid1 <= i_write_Rows_valid or  write_Rows_valid;
+
 u_csv_write_file : entity work.csv_write_file
     generic map(
             FileName => receive_FileName,
@@ -169,7 +180,7 @@ u_csv_write_file : entity work.csv_write_file
             reopen_file => reopen_file_write,
             clk => clk,
             Rows => write_Rows,
-            valid => write_Rows_valid,
+            valid => i_write_Rows_valid1,
             done => done
 
     );

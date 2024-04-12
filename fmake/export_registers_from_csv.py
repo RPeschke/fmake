@@ -230,7 +230,7 @@ class register_exporter:
                 read_body = ret["read"][x]["body"]
             )
            
-            print(content)
+            vprint(10)(content)
 
             write_file(f"{self.vhdl_output_folder}/{package_name}.vhd", content)
             write_file(f"{self.vhdl_output_folder}/{package_name}_entity.vhd", ret["entity"][x])
@@ -245,7 +245,7 @@ class register_exporter:
             else:
                 ret += make_python_class_with_arguments(i, x)
             
-        print(ret)
+        vprint(10)(ret)
         write_file( self.python_output_file , ret)        
             
 
@@ -268,12 +268,12 @@ def create_vhdl_one_record(module_name, group):
     members = ""        
         # Remove duplicates and create record entries
     for _, row in group.drop_duplicates("reg_name").iterrows():
-        print(row['size'])
+        vprint(10)(row['size'])
         size_of_reg = row['size']
         t = "signed" if "s" in size_of_reg else "unsigned" if "u" in size_of_reg else "std_logic_vector"
         size_of_reg = size_of_reg.replace("u","").replace("s","")
         members += f"  {row['reg_name']} : {t}({int(size_of_reg) - 1} downto 0);\n"
-        
+
     record = record_def.format(
         module_name = module_name,
         members = members
@@ -519,8 +519,8 @@ def export_registers_from_csv(x):
     
     vprint(0)("hello from export_registers_from_csv")
     parser.add_argument('--csv',   help='Path to the input file', required=True)
-    parser.add_argument('--vhd',   help='Path to the output vhdl Folder', required=True)
-    parser.add_argument('--py',   help='Path to the output python Folder', required=True)
+    parser.add_argument('--vhd',   help='Path to the output vhdl folder', required=True)
+    parser.add_argument('--py',   help='Path to the output python file', required=True)
 
     args = extract_cl_arguments(parser, x)
 
