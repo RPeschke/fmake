@@ -91,6 +91,9 @@ class vhdl_file_io:
     def wait_for_index(self ,index ):
         for i in range(10000):
             try:
+                if i == 10000-1:
+                    sleep(0.1)
+
                 ret = self.read_poll()
                 if ret  ==  index:
                     return True
@@ -114,14 +117,24 @@ class vhdl_file_io:
         
     def query(self , df):
         df = to_dataframe(df)
-        
-        self.write_file(df)
         index = self.read_poll() + 1   
-        set_content(self.send_lock_FileName, index )
+
+        for i in range(10):
+            self.write_file(df)
+            set_content(self.send_lock_FileName, index )
+            if error_detected:
+                vprint(10)("query: retry Index Expected: ", index ," try: " , i)
         
-        if not self.wait_for_index(index):
-            vprint(0)("query: error: Index read: ", self.read_poll() , " 	Index Expected: ", index)
+            if self.wait_for_index(index):
+                error_detected = False
+                break
+                
+            vprint(10)("query: error: Index read: ", self.read_poll() , " 	Index Expected: ", index ," try: " , i)
+            error_detected = True
     
+        if error_detected:
+            vprint(0)("query: error: Index read: ", self.read_poll() , " 	Index Expected: ", index)
+
         return self.read_file()
     
         
