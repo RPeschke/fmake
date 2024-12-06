@@ -117,9 +117,10 @@ class vhdl_file_io:
         
     def query(self , df):
         df = to_dataframe(df)
-        index = self.read_poll() + 1   
-
+        index = self.read_poll() 
+        error_detected = False
         for i in range(10):
+            index += 1
             self.write_file(df)
             set_content(self.send_lock_FileName, index )
             if error_detected:

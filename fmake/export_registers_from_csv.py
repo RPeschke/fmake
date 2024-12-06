@@ -180,12 +180,90 @@ class reg_{module_name}_t:
 """
 
 
+
+cpp_class_with_arguments = """
+class  reg_{module_name}_t {
+public:
+reg_{module_name}_t(std::string instance) : m_instance(instance) { }
+std::string m_instance;
+
+    template <typename T>
+    void read_register(const T& reg){
+
+{read_registers}
+
+    }
+
+{members}
+
+};
+"""
+
+cpp_class_without_arguments = """
+class  reg_{module_name}_t {
+public:
+reg_{module_name}_t(std::string instance) : m_instance(instance) { }
+std::string m_instance;
+
+    template <typename T>
+    void read_register(const T& reg){
+
+{read_registers}
+
+    }
+
+{members}
+
+};
+"""
+
 def write_file(FileName, content):
     with open(FileName, "w") as f:
             f.write(content)
 
 
+def make_cpp_class_with_arguments(module_name,group):
+    read_registers =""   
+    members = ""
 
+    
+    for i1,x1 in group.groupby("reg_name"):
+        members += f"  int64_t  {x1.iloc[0].reg_name} = 0;\n"
+        for e in x1.iterrows():
+            if e[1]['AutoReset'] == 1:
+                read_registers += f"      {i1} = 0;\n\n"
+                
+            read_registers += f'      if (m_instance == "' + str(e[1]['instance']) + '")\n'        
+            read_registers += f"        read(reg, {str(e[1]['addr'])}, {i1});\n\n"
+
+    ret = cpp_class_with_arguments.replace( "{module_name}" ,  module_name)
+    ret = ret.replace( "{read_registers}" ,  read_registers)
+    ret = ret.replace( "{members}" ,  members)
+        
+        
+    
+    return ret 
+
+def make_cpp_class_without_arguments(module_name,group):
+    read_registers =""   
+    members = ""
+
+    
+    for i1,x1 in group.groupby("reg_name"):
+        members += f"  int64_t  {x1.iloc[0].reg_name} = 0;\n"
+        for e in x1.iterrows():
+            if e[1]['AutoReset'] == 1:
+                read_registers += f"      {i1} = 0;\n\n"
+
+            read_registers += f"      read(reg, {str(e[1]['addr'])}, {i1});\n\n"
+
+    ret = cpp_class_without_arguments.replace( "{module_name}" ,  module_name)
+    ret = ret.replace( "{read_registers}" ,  read_registers)
+    ret = ret.replace( "{members}" ,  members)
+        
+        
+    
+    return ret 
 
 class register_exporter:
 
@@ -193,17 +271,18 @@ class register_exporter:
             self, 
             register_file = "register_map.csv", 
             vhdl_output_folder = "klm-trg/src/generated/" , 
-            python_output_file = "klm_trg_py_scripts/register_map.py" 
+            python_output_file = "klm_trg_py_scripts/register_map.py" ,
+            cpp_output_file = ""
                  ) -> None:
         self.df = pd.read_csv(register_file, skip_blank_lines=True)
         self.vhdl_output_folder  = vhdl_output_folder
         self.python_output_file  = python_output_file
+        self.cpp_output_file     = cpp_output_file
    
-        pass
 
     def make_top(self):
 
-        instances = ",\n".join("  " + instance for instance in self.df["instance"].unique())
+        instances = ",\n".join("  " + instance for instance in self.df['instance'].unique())
 
         
 
@@ -216,38 +295,67 @@ class register_exporter:
 
     def make_register_package(self):             
         ret =  extract_registers(self.df)
-        for x in ret["records"].keys():
+        for x in ret['records'].keys():
 
             package_name = f"reg_{x}_pac"
             content = package_header_and_body.format( 
                 package_name = package_name,
-                records = ret["records"][x],
+                records = ret['records'][x],
                 
-                ctr_header = ret["ctr"][x]["header"],
-                ctr_body = ret["ctr"][x]["body"],
+                ctr_header = ret['ctr'][x]['header'],
+                ctr_body = ret['ctr'][x]['body'],
 
-                read_header = ret["read"][x]["header"],
-                read_body = ret["read"][x]["body"]
+                read_header = ret['read'][x]['header'],
+                read_body = ret['read'][x]['body']
             )
            
             vprint(10)(content)
 
             write_file(f"{self.vhdl_output_folder}/{package_name}.vhd", content)
-            write_file(f"{self.vhdl_output_folder}/{package_name}_entity.vhd", ret["entity"][x])
+            write_file(f"{self.vhdl_output_folder}/{package_name}_entity.vhd", ret['entity'][x])
              
         
 
     def make_python_package(self):
         ret = ""
         for i,x in self.df.groupby("module"):
-            if x["instance"].unique().size == 1:
+            if x['instance'].unique().size == 1:
                 ret += make_python_class_no_arguments(i, x)
             else:
                 ret += make_python_class_with_arguments(i, x)
             
         vprint(10)(ret)
         write_file( self.python_output_file , ret)        
-            
+
+    def make_cpp_package(self):
+        ret = "#pragma once\n\n#include <string> \n\n\n"
+        ret += "namespace register_map {\n\n"
+        ret += """
+
+template <typename T1, typename T2>
+void read(const T1& reg, int addr , T2& value){
+  if (reg.addr == addr){
+    value = reg.value;
+  }
+}
+
+"""
+        for i,x in self.df.groupby("module"):
+            if x['instance'].unique().size == 1:
+                ret += make_cpp_class_without_arguments(i, x)
+            else:
+                ret += make_cpp_class_with_arguments(i, x)
+        
+        ret += "\n\nstruct csv_register_t{\n\n"
+        for i, e in self.df.drop_duplicates(["instance" , "module"]).iterrows():
+            ret += f'  reg_{e.module}_t {e.instance}_{e.module} = reg_{e.module}_t( "{e.instance}" );\n\n'
+
+
+        ret += "\n\n};\n\n"
+        ret += "\n\n}\n\n"
+
+        write_file( self.cpp_output_file , ret)            
+        
 
 def make_default(x, reg_name= "ret"):
     
@@ -255,10 +363,10 @@ def make_default(x, reg_name= "ret"):
     try:
         size_of_reg = x['size']
         t = "signed(to_signed(" if "s" in size_of_reg else "unsigned(to_unsigned(" if "u" in size_of_reg else "std_logic_vector(to_unsigned("
-        r = f" {t}{str(int(x["default"]) )}, {reg_name}.{x["reg_name"]}'length ));\n"
+        r = f" {t}{str(int(x['default']) )}, {reg_name}.{x['reg_name']}'length ));\n"
         return r
     except:
-        return x["default"] +";\n"
+        return x['default'] +";\n"
     
     
 
@@ -300,7 +408,7 @@ def create_vhdl_ctr_functions_no_arguments(module_name, group):
     function_body = ""
               
     for _, row in group.drop_duplicates("reg_name").iterrows():
-        function_body += f"    ret.{row["reg_name"]} := {make_default(row)}"
+        function_body += f"    ret.{row['reg_name']} := {make_default(row)}"
                 
 
     body = function_def.format(
@@ -321,10 +429,10 @@ def create_vhdl_ctr_functions_with_arguments(module_name, group):
     
     function_body  = "    "
     
-    for u in group["instance"].unique():
+    for u in group['instance'].unique():
         function_body     += "if instance = " + u +" then\n"
         for e in group[group.instance == u].iterrows():
-            function_body += "        ret." +  e[1]["reg_name"] +" := " +  make_default(e[1]) 
+            function_body += "        ret." +  e[1]['reg_name'] +" := " +  make_default(e[1]) 
         function_body += "    els"
     
     function_body += unhandled_case
@@ -345,7 +453,7 @@ def create_vhdl_ctr_functions_with_arguments(module_name, group):
 def create_vhdl_ctr_functions(df):
     ret = {}
     for i,x in df.groupby("module"):
-        if len(x["instance"].unique()) == 1:
+        if len(x['instance'].unique()) == 1:
             ret[i] = create_vhdl_ctr_functions_no_arguments(i, x)
         else:
             ret[i] = create_vhdl_ctr_functions_with_arguments(i,x)
@@ -362,8 +470,8 @@ def create_vhdl_read_procedure_no_argument(module_name, group):
     defaults = ""
     
     for e in group.iterrows():
-        defaults += f"    reg_out.{e[1]["reg_name"]} <= {make_default(e[1], "reg_out"  )}" if e[1]["AutoReset"] == 1 else ""   
-        defaults += f"    read_data_s(reg, {str(e[1]["addr"])}, reg_out.{e[1]["reg_name"]});\n"              
+        defaults += f"    reg_out.{e[1]['reg_name']} <= {make_default(e[1], 'reg_out'  )}" if e[1]['AutoReset'] == 1 else ""   
+        defaults += f"    read_data_s(reg, {str(e[1]['addr'])}, reg_out.{e[1]['reg_name']});\n"              
     
     body = procedure_def.format(
         procedure_signature = procedure_signature,
@@ -383,11 +491,11 @@ def create_vhdl_read_procedure_with_argument(module_name, group):
     
     procedure_body = "    "
          
-    for u in group["instance"].unique():
+    for u in group['instance'].unique():
         procedure_body += "if instance = " + u +" then\n"
         for e in group[group.instance == u].iterrows():
-            procedure_body += f"        reg_out.{e[1]["reg_name"]} <= {make_default(e[1], "reg_out"  )}" if e[1]["AutoReset"] == 1 else ""
-            procedure_body += f"        read_data_s(reg, {str(e[1]["addr"])}, reg_out.{e[1]["reg_name"]} );\n"
+            procedure_body += f"        reg_out.{e[1]['reg_name']} <= {make_default(e[1], 'reg_out'  )}" if e[1]['AutoReset'] == 1 else ""
+            procedure_body += f"        read_data_s(reg, {str(e[1]['addr'])}, reg_out.{e[1]['reg_name']} );\n"
         procedure_body += "    els"
 
 
@@ -408,7 +516,7 @@ def create_vhdl_read_procedure_with_argument(module_name, group):
 def create_vhdl_read_procedure(df):
     ret = {}
     for i,x in df.groupby("module"):
-        if len(x["instance"].unique()) == 1:
+        if len(x['instance'].unique()) == 1:
             ret[i] = create_vhdl_read_procedure_no_argument(i, x)
         else:
             ret[i] = create_vhdl_read_procedure_with_argument(i, x)
@@ -440,7 +548,7 @@ def create_vhdl_entity_with_arguments(module_name, group):
 def create_vhdl_entity(df):
     ret = {}
     for i,x in df.groupby("module"):
-        if len(x["instance"].unique()) == 1:
+        if len(x['instance'].unique()) == 1:
             ret[i] = create_vhdl_entity_no_arguments(i, x)
         else:
             ret[i] = create_vhdl_entity_with_arguments(i, x)
@@ -450,11 +558,11 @@ def create_vhdl_entity(df):
 def extract_registers(df):
     ret = {}
 
-    ret["records"] = create_vhdl_records(df)
-    ret["ctr"]     = create_vhdl_ctr_functions(df)
-    ret["read"]    = create_vhdl_read_procedure(df)
+    ret['records'] = create_vhdl_records(df)
+    ret['ctr']     = create_vhdl_ctr_functions(df)
+    ret['read']    = create_vhdl_read_procedure(df)
     
-    ret["entity"]    = create_vhdl_entity(df)
+    ret['entity']    = create_vhdl_entity(df)
     return ret
         
 
@@ -472,7 +580,7 @@ def make_python_class_no_arguments(module_name, group):
     for i1,x1 in group.groupby("reg_name"):
         members += f"{ind}def {i1}(self, value):\n"
         for e in x1.iterrows():
-            members += f"{ind}{ind}{set_reg[e[1]["write"]] + str(e[1]["addr"])}, value)\n\n"
+            members += f"{ind}{ind}{set_reg[e[1]['write']] + str(e[1]['addr'])}, value)\n\n"
 
     ret = python_class_no_arguments.format(
         module_name = module_name,
@@ -488,8 +596,8 @@ def make_python_class_with_arguments(module_name, group):
     for i1,x1 in group.groupby("reg_name"):
         members += f"{ind}def {i1}(self, value):\n"
         for e in x1.iterrows():
-            members += f"{ind}{ind}if self.instance == '{e[1]["instance"]}':\n"        
-            members += f"{ind}{ind}{ind}{set_reg[e[1]["write"]] + str(e[1]["addr"])}, value)\n\n"
+            members += f"{ind}{ind}if self.instance == '{e[1]['instance']}':\n"        
+            members += f"{ind}{ind}{ind}{set_reg[e[1]['write']] + str(e[1]['addr'])}, value)\n\n"
 
     ret = python_class_with_arguments.format(
         module_name= module_name,
@@ -504,14 +612,15 @@ def make_python_class_with_arguments(module_name, group):
     
     
 
-def run_export_registers_from_csv(register_file, vhdl_output_folder, python_output_file):
+def run_export_registers_from_csv(register_file, vhdl_output_folder, python_output_file, cpp_output_file):
     ex = register_exporter(
-        register_file, vhdl_output_folder, python_output_file
+        register_file, vhdl_output_folder, python_output_file, cpp_output_file
     )
 
     ex.make_top()
     ex.make_register_package()
     ex.make_python_package()
+    ex.make_cpp_package()
 
 
 def export_registers_from_csv(x):
@@ -521,14 +630,15 @@ def export_registers_from_csv(x):
     parser.add_argument('--csv',   help='Path to the input file', required=True)
     parser.add_argument('--vhd',   help='Path to the output vhdl folder', required=True)
     parser.add_argument('--py',   help='Path to the output python file', required=True)
-
+    parser.add_argument('--cpp',   help='Path to the output c++ file', required=True)
     args = extract_cl_arguments(parser, x)
 
     register_file = args.csv
     vhdl_output_folder = args.vhd
     python_output_file =args.py
+    cpp_output_file  = args.cpp
     
-    run_export_registers_from_csv(register_file, vhdl_output_folder, python_output_file)
+    run_export_registers_from_csv(register_file, vhdl_output_folder, python_output_file, cpp_output_file)
 
 
 add_program("export-registers", export_registers_from_csv)

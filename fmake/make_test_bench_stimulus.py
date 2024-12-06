@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import uproot
+#import uproot
 import argparse
 
 from fmake.vhdl_programm_list import add_program
@@ -34,14 +34,14 @@ def read_file(fileName, branch):
         df = df.rename(columns=lambda x: x.strip())
         return df
     
-    if fileName[-4:].lower() == "root":
-        up  = uproot.open(fileName)
-        
-        df =  up[branch].arrays(library="pd")
-        df["valid"] = 1
-        df = df.rename(columns=lambda x: x.strip())
-        df = df.rename(columns=lambda x: (branch+ "." + x).lower())  
-        return df
+    #if fileName[-4:].lower() == "root":
+    #    up  = uproot.open(fileName)
+    #    
+    #    df =  up[branch].arrays(library="pd")
+    #    df["valid"] = 1
+    #    df = df.rename(columns=lambda x: x.strip())
+    #    df = df.rename(columns=lambda x: (branch+ "." + x).lower())  
+    #    return df
     
 def make_empty_rows(df,numOfRows):
     line = ""
