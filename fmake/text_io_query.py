@@ -6,7 +6,7 @@ from time import sleep
 from fmake.generic_helper import constants
 from fmake.generic_helper import verbose_printer_cl 
 from fmake.generic_helper import get_build_directory
-
+from io import StringIO
 vprint = verbose_printer_cl()
 
 def get_content(filename):
@@ -73,10 +73,15 @@ class vhdl_file_io:
         
     def read_poll(self):
         try:
-            txt = get_content(self.receive_lock_FileName)
-            return int(txt.split("\n")[1].split(",")[1])
+            for _  in range(10):
+                txt = get_content(self.receive_lock_FileName)
+                if len(txt)> 5:
+                    return int(txt.split("\n")[1].split(",")[1])
+                sleep(0.1)
+            
         except:
-            vprint(11)("read_poll:" , txt)
+            vprint(21)("read_poll:" , txt)
+        return -1
 
     def reset(self):
         set_content(self.send_lock_FileName, 0)
@@ -91,20 +96,39 @@ class vhdl_file_io:
         
         
     def wait_for_index(self ,index ):
-        for i in range(self.wait_time):
-            try:
-                if i == self.wait_time-1:
-                    sleep(0.1)
+        size_new = 1
+        size_old = 0
+        ret = -5
+        current_index = 0
+        tries = 0
+        while True:
+            size_old = size_new
+            size_new = os.path.getsize(self.receive_FileName) 
 
-                ret = self.read_poll()
-                if ret  ==  index:
+            if size_new > 10 and size_new == size_old:
+                tries += 1 
+                size_old = 0
+                sleep(0.1)
+                vprint(40)("wait_for_index: Expected index: "+  str(index) + " received index: "+str( current_index))
+            
+            if tries > self.wait_time:
+                vprint(40)("wait_for_index: tried NTimes; Expected index: "+  str(index) + " received index: "+str( current_index))
+                return False
+            
+
+            
+            try:
+                current_index = self.read_poll()
+                if current_index  ==  index:
+                    vprint(50)("wait_for_index: return True; Expected index: "+  str(index) + " received index: "+str( current_index))
                     return True
 
             except: 
                 pass
-        vprint(10)("wait_for_index: Expected index:", index, " received index:", ret)
-        return False
-    
+
+
+
+
     def write_file(self, df):
         if self.columns is not None:
             df[self.columns ].to_csv(self.send_FileName, sep = " ", index = False)
@@ -134,6 +158,7 @@ class vhdl_file_io:
                 vprint(10)("query: retry Index Expected: ",  self.last_send_index ," try: " , i)
         
             if self.wait_for_index( self.last_send_index ):
+                
                 error_detected = False
                 break
                 
@@ -148,9 +173,22 @@ class vhdl_file_io:
         
     def read_file(self):
         
-        df = pd.read_csv(self.receive_FileName)
-        df.columns = df.columns.str.replace(' ', '')
-        return df
+        for i in range(100):
+            if i > 50:
+                sleep(0.1)
+            try:
+                content = get_content(self.receive_FileName)
+                if len(content) < 10:
+                    continue
+                csv_data = StringIO(content)
+                df = pd.read_csv(csv_data)
+                df.columns = df.columns.str.replace(' ', '')
+                return df
+            except:
+                vprint(10)("read_file: error: unable to read: receive_FileName: ", self.receive_FileName )
+        print("read_file: error: unable to read after N tries: receive_FileName:  ", self.receive_FileName )
+
+
     
 
 
