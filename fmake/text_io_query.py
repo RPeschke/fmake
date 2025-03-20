@@ -40,6 +40,8 @@ class vhdl_file_io:
     def __init__(self, path , columns=None):
         self.columns = columns
         self.path = path
+        self.wait_time = 10
+        self.last_send_index  = 0
 
         if not os.path.exists(path):
             os.mkdir(path)
@@ -89,9 +91,9 @@ class vhdl_file_io:
         
         
     def wait_for_index(self ,index ):
-        for i in range(10000):
+        for i in range(self.wait_time):
             try:
-                if i == 10000-1:
+                if i == self.wait_time-1:
                     sleep(0.1)
 
                 ret = self.read_poll()
@@ -117,24 +119,29 @@ class vhdl_file_io:
         
     def query(self , df):
         df = to_dataframe(df)
-        index = self.read_poll() 
+        try:
+            index = self.read_poll() 
+            self.last_send_index = index
+        except:
+            vprint(10)("query: error: unable to read last index")
+            
         error_detected = False
         for i in range(10):
-            index += 1
+            self.last_send_index += 1
             self.write_file(df)
-            set_content(self.send_lock_FileName, index )
+            set_content(self.send_lock_FileName,  self.last_send_index )
             if error_detected:
-                vprint(10)("query: retry Index Expected: ", index ," try: " , i)
+                vprint(10)("query: retry Index Expected: ",  self.last_send_index ," try: " , i)
         
-            if self.wait_for_index(index):
+            if self.wait_for_index( self.last_send_index ):
                 error_detected = False
                 break
                 
-            vprint(10)("query: error: Index read: ", self.read_poll() , " 	Index Expected: ", index ," try: " , i)
+            vprint(10)("query: error: Index read: ", self.read_poll() , " 	Index Expected: ",  self.last_send_index ," try: " , i)
             error_detected = True
     
         if error_detected:
-            vprint(0)("query: error: Index read: ", self.read_poll() , " 	Index Expected: ", index)
+            vprint(0)("query: error: Index read: ", self.read_poll() , " 	Index Expected: ",  self.last_send_index)
 
         return self.read_file()
     
