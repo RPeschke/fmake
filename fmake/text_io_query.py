@@ -51,12 +51,12 @@ class vhdl_file_io:
         self.receive_FileName       = path + "/"+ constants.text_io_polling_receive_txt 
         self.receive_lock_FileName  = path + "/"+ constants.text_io_polling_receive_lock_txt 
 
-        vprint(10)("self.columns:               ", self.columns)
-        vprint(10)("self.FileName:              ", self.path)
-        vprint(10)("self.send_lock_FileName:    ", self.send_lock_FileName)
-        vprint(10)("self.send_FileName:         ", self.send_FileName)
-        vprint(10)("self.receive_FileName:      ", self.receive_FileName)
-        vprint(10)("self.receive_lock_FileName: ", self.receive_lock_FileName)
+        vprint(20)("self.columns:               ", self.columns)
+        vprint(20)("self.FileName:              ", self.path)
+        vprint(20)("self.send_lock_FileName:    ", self.send_lock_FileName)
+        vprint(20)("self.send_FileName:         ", self.send_FileName)
+        vprint(20)("self.receive_FileName:      ", self.receive_FileName)
+        vprint(20)("self.receive_lock_FileName: ", self.receive_lock_FileName)
         try:
             index =int( get_content(self.send_lock_FileName))
         except:

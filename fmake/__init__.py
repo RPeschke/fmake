@@ -21,4 +21,6 @@ import fmake.make_timestamps
 
 from fmake.text_io_query import text_io_query
 
+from fmake.generic_helper import get_project_directory
+
 

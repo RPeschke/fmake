@@ -252,3 +252,8 @@ def get_build_directory():
         prefix+="../"
 
     raise Exception("unable to find build directory")
+
+
+def get_project_directory():
+    build = get_build_directory()
+    return os.path.abspath(build + "/../" )
