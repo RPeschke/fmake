@@ -255,5 +255,9 @@ def get_build_directory():
 
 
 def get_project_directory():
-    build = get_build_directory()
-    return os.path.abspath(build + "/../" )
+    try:
+        build = get_build_directory()
+        return os.path.abspath(build + "/../" )
+    except:
+        return os.path.abspath(".")
+    
