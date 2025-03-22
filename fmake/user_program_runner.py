@@ -13,6 +13,11 @@ import os
 import hashlib
 import fmake
 
+import importlib.util
+import os
+import sys
+from pathlib import Path
+
 
 def find_fmake_program_functions(file_path):
     pattern = re.compile(r"@fmake\.program\s*\n\s*def\s+(\w+)\s*\(")
@@ -77,6 +82,33 @@ def import_from_filepath_full(filepath):
     return module
 
 
+def load_and_run_module(path_to_module):
+    module_path = Path(path_to_module).resolve()
+    module_dir = module_path.parent
+    module_name = module_path.stem
+
+    # Create the spec
+    spec = importlib.util.spec_from_file_location(module_name, str(module_path))
+    module = importlib.util.module_from_spec(spec)
+
+    # Add module directory to sys.path for relative imports
+    sys.path.insert(0, str(module_dir))
+
+    # Save current directory
+    old_cwd = os.getcwd()
+    try:
+        # Change to module directory
+        os.chdir(module_dir)
+
+        # Execute the module
+        spec.loader.exec_module(module)
+
+    finally:
+        # Restore the original working directory and sys.path
+        os.chdir(old_cwd)
+        sys.path.pop(0)
+
+    return module
 
  
 def parse_args_to_kwargs(arglist):
@@ -106,7 +138,7 @@ def get_fmake_user_programs():
             )
     return ret
 
-def run_fmake_user_program(args):
+def run_fmake_user_program(programName , args):
     # Example usage
     
 
@@ -117,19 +149,21 @@ def run_fmake_user_program(args):
     if not check_unique_program_names(user_programs ):
         return False, user_programs
         
-    FileList =  find_program_rows(user_programs, args[1])
+    FileList =  find_program_rows(user_programs, programName)
 
     if len(FileList) == 0:
         return False, user_programs
 
     filepath = FileList[0][0]
     functionName = FileList[0][2]
-    module = import_from_filepath_full(filepath  )
+    module = load_and_run_module(filepath  )
+    print(128)
     # Call a function defined in that module
     if not hasattr(module, functionName):
         return False, user_programs
     
-    args, kwargs = parse_args_to_kwargs( args[2:])
+    args, kwargs = parse_args_to_kwargs(args)
+    config.Execution_Path = os.getcwd()
     getattr(module, functionName)(*args, **kwargs)  # Call the function
     return True, user_programs
 
@@ -137,3 +171,12 @@ def run_fmake_user_program(args):
 
 def program(func):
     return func
+
+
+class programs_config_t:
+    def __init__(self):
+        self.Execution_Path=os.getcwd()
+        self.argv = sys.argv[2:]
+        self.generic = {}
+
+config = programs_config_t()
