@@ -138,16 +138,35 @@ def get_fmake_user_programs():
             )
     return ret
 
-def run_fmake_user_program(programName , args):
-    # Example usage
+def get_program(Name, file = None):
+    if file is None:
+        user_programs = get_fmake_user_programs()
+        if not check_unique_program_names(user_programs ):
+            raise Exception("Programs are not unique")
+            
+        FileList =  find_program_rows(user_programs, Name)
+
+        if len(FileList) == 0:
+            raise Exception("Program Not Found")
+
+        file = FileList[0][0]
+    
+    
+    module = load_and_run_module(file  )
+
+    if not hasattr(module, Name):
+        raise Exception("Program Not Found")
     
 
+    return getattr(module, Name)
 
+
+def run_fmake_user_program(programName):
 
 
     user_programs = get_fmake_user_programs()
     if not check_unique_program_names(user_programs ):
-        return False, user_programs
+        return None, user_programs
         
     FileList =  find_program_rows(user_programs, programName)
 
@@ -157,15 +176,15 @@ def run_fmake_user_program(programName , args):
     filepath = FileList[0][0]
     functionName = FileList[0][2]
     module = load_and_run_module(filepath  )
-    print(128)
-    # Call a function defined in that module
+
+
     if not hasattr(module, functionName):
-        return False, user_programs
+        return None, user_programs
     
-    args, kwargs = parse_args_to_kwargs(args)
+
     config.Execution_Path = os.getcwd()
-    getattr(module, functionName)(*args, **kwargs)  # Call the function
-    return True, user_programs
+    fun = getattr(module, functionName) # (*args, **kwargs)  # Call the function
+    return fun, user_programs
 
 
 

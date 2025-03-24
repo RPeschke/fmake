@@ -133,13 +133,13 @@ library ieee;
     use work.rolling_register32_p.all;
     
     use work.reg_{module_name}_pac.all;
-
+    use work.global_system_pack.all;
 entity reg_{module_name} is 
     generic (
         instance : in REG_instance
     ); 
     port(
-        gSystem : in global_system;
+        gSystem : in global_system_t;
         registers : out reg_{module_name}_t
     );
 end entity;
@@ -287,7 +287,7 @@ class register_exporter:
    
 
     def make_top(self):
-        if self.vhdl_output_folder is "none":
+        if self.vhdl_output_folder == "none":
             return
 
         instances = ",\n".join("  " + instance for instance in self.df['instance'].unique())
@@ -302,7 +302,7 @@ class register_exporter:
             
 
     def make_register_package(self):
-        if self.vhdl_output_folder is "none":
+        if self.vhdl_output_folder == "none":
             return             
         ret =  extract_registers(self.df)
         for x in ret['records'].keys():
@@ -327,7 +327,7 @@ class register_exporter:
         
 
     def make_python_package(self):
-        if self.python_output_file is "none":
+        if self.python_output_file == "none":
             return
         ret = ""
         for i,x in self.df.groupby("module"):
@@ -340,7 +340,7 @@ class register_exporter:
         write_file( self.python_output_file , ret)        
 
     def make_cpp_package(self):
-        if self.cpp_output_file is "none":
+        if self.cpp_output_file == "none":
             return
         ret = "#pragma once\n\n#include <string> \n\n\n"
         ret += "namespace register_map {\n\n"

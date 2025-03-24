@@ -23,4 +23,4 @@ from fmake.text_io_query import text_io_query
 
 from fmake.generic_helper import get_project_directory
 
-from fmake.user_program_runner import program, config
+from fmake.user_program_runner import program, config, get_program
