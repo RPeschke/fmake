@@ -86,43 +86,6 @@ end package body;
    
     """
 
-entity_no_arguments = """
-library ieee;
-    use ieee.std_logic_1164.all;
-    use ieee.numeric_std.all;
-    use work.csv_register_top.all;
-
-    use work.rolling_register32_p.all;
-    
-    use work.reg_{module_name}_pac.all;
-    
-    use work.global_system_pack.all;
-
-entity reg_{module_name} is 
-    port(
-        gSystem : in global_system_t;
-        registers : out reg_{module_name}_t
-    );
-end entity;
-
-architecture rtl of  reg_{module_name} is
-    signal i_registers : reg_{module_name}_t := reg_{module_name}_t_ctr;
-
-begin 
-
-process (gSystem.clk) is 
-
-begin 
-    IF rising_edge(gSystem.clk) THEN
-        read_registers(gSystem.reg, i_registers);
-   end if;
-end process;
-    
-    registers <=  i_registers;
-
-end architecture;
-
-"""
 
 entity_with_arguments  = """
 library ieee;
@@ -175,15 +138,6 @@ class reg_{module_name}_t:
 
     """
 
-python_class_no_arguments =  """
-class reg_{module_name}_t:
-{ind}def __init__(self, reg):
-{ind}{ind}self.reg = reg
-
-{members}
-
-
-"""
 
 
 
@@ -205,23 +159,6 @@ std::string m_instance;
 };
 """
 
-cpp_class_without_arguments = """
-class  reg_{module_name}_t {
-public:
-reg_{module_name}_t(std::string instance) : m_instance(instance) { }
-std::string m_instance;
-
-    template <typename T>
-    void read_register(const T& reg){
-
-{read_registers}
-
-    }
-
-{members}
-
-};
-"""
 
 def write_file(FileName, content):
     with open(FileName, "w") as f:
@@ -250,26 +187,6 @@ def make_cpp_class_with_arguments(module_name,group):
     
     return ret 
 
-def make_cpp_class_without_arguments(module_name,group):
-    read_registers =""   
-    members = ""
-
-    
-    for i1,x1 in group.groupby("reg_name"):
-        members += f"  int64_t  {x1.iloc[0].reg_name} = 0;\n"
-        for e in x1.iterrows():
-            if e[1]['AutoReset'] == 1:
-                read_registers += f"      {i1} = 0;\n\n"
-
-            read_registers += f"      read(reg, {str(e[1]['addr'])}, {i1});\n\n"
-
-    ret = cpp_class_without_arguments.replace( "{module_name}" ,  module_name)
-    ret = ret.replace( "{read_registers}" ,  read_registers)
-    ret = ret.replace( "{members}" ,  members)
-        
-        
-    
-    return ret 
 
 class register_exporter:
 
@@ -310,11 +227,11 @@ class register_exporter:
             content = package_header_and_body.format( 
                 package_name = package_name,
                 records = ret['records'][x] ,
-                records_addr =  ret['records_addr'][x],
+                records_addr =  "",
                 ctr_header = ret['ctr'][x]['header'],
                 ctr_body = ret['ctr'][x]['body'],
-                addr_ctr_header = ret['addr_ctr'][x]['header'],
-                addr_ctr_body = ret['addr_ctr'][x]['body'],
+                addr_ctr_header = "",
+                addr_ctr_body = "",
                 read_header = ret['read'][x]['header'],
                 read_body = ret['read'][x]['body']
             )
@@ -324,17 +241,33 @@ class register_exporter:
             write_file(f"{self.vhdl_output_folder}/{package_name}.vhd", content)
             write_file(f"{self.vhdl_output_folder}/{package_name}_entity.vhd", ret['entity'][x])
              
-        
+        records_addr = ""
+        addr_ctr_header = ""
+        addr_ctr_body = ""
+        for x in ret['records'].keys():
+            records_addr+= "\n\n\n" +  ret['records_addr'][x]
+            addr_ctr_header += "\n\n\n" + ret['addr_ctr'][x]['header']
+            addr_ctr_body += "\n\n\n" + ret['addr_ctr'][x]['body']
+
+        content = package_header_and_body.format( 
+                package_name = "reg_address_pac",
+                records = "",
+                records_addr = records_addr,
+                ctr_header ="",
+                ctr_body = "",
+                addr_ctr_header = addr_ctr_header,
+                addr_ctr_body = addr_ctr_body,
+                read_header = "",
+                read_body = ""
+            )
+        write_file(f"{self.vhdl_output_folder}/csv_register_addresses.vhd", content)
 
     def make_python_package(self):
         if self.python_output_file == "none":
             return
         ret = ""
         for i,x in self.df.groupby("module"):
-            if x['instance'].unique().size == 1:
-                ret += make_python_class_no_arguments(i, x)
-            else:
-                ret += make_python_class_with_arguments(i, x)
+            ret += make_python_class_with_arguments(i, x)
             
         vprint(10)(ret)
         write_file( self.python_output_file , ret)        
@@ -355,10 +288,7 @@ void read(const T1& reg, int addr , T2& value){
 
 """
         for i,x in self.df.groupby("module"):
-            if x['instance'].unique().size == 1:
-                ret += make_cpp_class_without_arguments(i, x)
-            else:
-                ret += make_cpp_class_with_arguments(i, x)
+            ret += make_cpp_class_with_arguments(i, x)
         
         ret += "\n\nstruct csv_register_t{\n\n"
         for i, e in self.df.drop_duplicates(["instance" , "module"]).iterrows():
@@ -439,27 +369,6 @@ def create_vhdl_addr_records(df):
     return records
 
 
-def create_vhdl_ctr_functions_no_arguments(module_name, group):
-    function_signature = f"function reg_{module_name}_t_ctr return reg_{module_name}_t"
-    header = f"{function_signature};\n\n"
-             
-
-    function_body = ""
-              
-    for _, row in group.drop_duplicates("reg_name").iterrows():
-        function_body += f"    ret.{row['reg_name']} := {make_default(row)}"
-                
-
-    body = function_def.format(
-        function_signature = function_signature,
-        module_name = module_name,
-        body = function_body
-    )
-
-    return {
-           "header" : header,
-           "body"   : body
-    }
 
 def create_vhdl_ctr_functions_with_arguments(module_name, group):
     function_signature = f"function reg_{module_name}_t_ctr(instance : in REG_instance) return reg_{module_name}_t"
@@ -493,35 +402,11 @@ def create_vhdl_ctr_functions_with_arguments(module_name, group):
 def create_vhdl_addr_ctr_functions(df):
     ret = {}
     for i,x in df.groupby("module"):
-        if len(x['instance'].unique()) == 1:
-            ret[i] = create_vhdl_addr_ctr_functions_no_arguments(i, x)
-        else:
-            ret[i] = create_vhdl_addr_ctr_functions_with_arguments(i,x)
+        ret[i] = create_vhdl_addr_ctr_functions_with_arguments(i,x)
             
     return ret
 
-def create_vhdl_addr_ctr_functions_no_arguments(module_name, group):
-    module_name += "_addr"
-    function_signature = f"function reg_{module_name}_t_ctr return reg_{module_name}_t"
-    header = f"{function_signature};\n\n"
-             
 
-    function_body = ""
-              
-    for _, row in group.drop_duplicates("reg_name").iterrows():
-        function_body += f"    ret.{row['reg_name']} := {row["addr"]};\n"
-                
-
-    body = function_def.format(
-        function_signature = function_signature,
-        module_name = module_name,
-        body = function_body
-    )
-
-    return {
-           "header" : header,
-           "body"   : body
-    }
 
 def create_vhdl_addr_ctr_functions_with_arguments(module_name, group):
     module_name+= "_addr"
@@ -557,35 +442,12 @@ def create_vhdl_addr_ctr_functions_with_arguments(module_name, group):
 def create_vhdl_ctr_functions(df):
     ret = {}
     for i,x in df.groupby("module"):
-        if len(x['instance'].unique()) == 1:
-            ret[i] = create_vhdl_ctr_functions_no_arguments(i, x)
-        else:
-            ret[i] = create_vhdl_ctr_functions_with_arguments(i,x)
+        ret[i] = create_vhdl_ctr_functions_with_arguments(i,x)
             
     return ret
     
 
 
-def create_vhdl_read_procedure_no_argument(module_name, group):
-    procedure_signature = f"procedure read_registers(reg: in register_32T; signal reg_out: out reg_{module_name}_t )"
-    header = f"{procedure_signature};\n" 
-             
-
-    defaults = ""
-    
-    for e in group.iterrows():
-        defaults += f"    reg_out.{e[1]['reg_name']} <= {make_default(e[1], 'reg_out'  )}" if e[1]['AutoReset'] == 1 else ""   
-        defaults += f"    read_data_s(reg, {str(e[1]['addr'])}, reg_out.{e[1]['reg_name']});\n"              
-    
-    body = procedure_def.format(
-        procedure_signature = procedure_signature,
-        body = defaults   
-    )
-
-    return {
-        "header" : header,
-        "body"   : body
-    }
 
 def create_vhdl_read_procedure_with_argument(module_name, group):
     procedure_signature = f"procedure read_registers(reg: in register_32T; instance : in REG_instance; signal  reg_out: out reg_{module_name}_t )"
@@ -620,23 +482,12 @@ def create_vhdl_read_procedure_with_argument(module_name, group):
 def create_vhdl_read_procedure(df):
     ret = {}
     for i,x in df.groupby("module"):
-        if len(x['instance'].unique()) == 1:
-            ret[i] = create_vhdl_read_procedure_no_argument(i, x)
-        else:
-            ret[i] = create_vhdl_read_procedure_with_argument(i, x)
+        ret[i] = create_vhdl_read_procedure_with_argument(i, x)
     return ret
 
 
 
-def create_vhdl_entity_no_arguments(module_name, group):
-    
-    
-    entity  = entity_no_arguments.format(
-        module_name = module_name
 
-    )
-    
-    return entity
 
 def create_vhdl_entity_with_arguments(module_name, group):
 
@@ -652,10 +503,8 @@ def create_vhdl_entity_with_arguments(module_name, group):
 def create_vhdl_entity(df):
     ret = {}
     for i,x in df.groupby("module"):
-        if len(x['instance'].unique()) == 1:
-            ret[i] = create_vhdl_entity_no_arguments(i, x)
-        else:
-            ret[i] = create_vhdl_entity_with_arguments(i, x)
+        ret[i] = create_vhdl_entity_with_arguments(i, x)
+
     return ret
 
 
@@ -678,26 +527,9 @@ set_reg  =  {
         4 : "self.reg.set_register("
     }
 ind = "    "
-def make_python_class_no_arguments(module_name, group):
 
-    
-    members = ""
-    
-    
-    for i1,x1 in group.groupby("reg_name"):
-        members += f"{ind}def {i1}(self, value):\n"
-        for e in x1.iterrows():
-            members += f"{ind}{ind}{set_reg[e[1]['write']] + str(e[1]['addr'])}, value)\n\n"
 
-    ret = python_class_no_arguments.format(
-        module_name = module_name,
-        ind = ind,
-        members = members
-    )
-    
 
-    return ret                    
-                    
 def make_python_class_with_arguments(module_name, group):
     members =""   
     for i1,x1 in group.groupby("reg_name"):
