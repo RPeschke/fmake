@@ -30,13 +30,22 @@ class printer:
     def __str__(self):
         return self.content
 
+class run_fmake_user_program:
+    def __init__(self, Name, Filename=None):
+        self.Name = Name
+        self.Filename = Filename
+    
+    def __call__(self, *args, **kwargs):
+        return get_program(Name= self.Name, file = self.Filename)(*args, **kwargs)
+
+
 class Scope:
     def __init__(self):
         self._globals = {}
         self._locals = {}
         userProgramsn = get_fmake_user_programs()
         for p in userProgramsn:
-            self._locals[p[2]] = lambda  *args, **kwargs: get_program(Name= p[2], file = p[0])(*args, **kwargs)
+            self._locals[p[2]] = run_fmake_user_program(Name= p[2], Filename = p[0])
 
     def run(self, code: str):
         self._locals["disp"] = printer()
@@ -183,12 +192,7 @@ def handle_disp(tag, value, scope):
 
     return scope.disp(value)
 
-@mdpy_processor
-def handle_fdisp(tag, value, scope):
-    if tag!="fdisp":
-        return None
 
-    return scope.disp(value)
 
 def handle_XML_section(tag, newscope):
     ret4 = ""
@@ -229,7 +233,6 @@ def update_content(content):
             line = content[where:].split('\n')[0]
             lineNR = len(content[:where].split('\n'))
             md_config["lineNR"] = lineNR
-            newscope._locals["__md_config__"] = md_config
             ret4 = handle_XML_section(x, newscope)
         except Exception as e:
             where = x.get('start', '?')
