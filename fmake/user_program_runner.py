@@ -26,7 +26,7 @@ def find_fmake_program_functions(file_path):
     return pattern.findall(contents)
 
 
-def list_python_file_timestamps(base_dir):
+def list_python_file_timestamps_one_level_down(base_dir):
     # Get all .py files in base_dir and one level down
     ret = []
     pattern_top = os.path.join(base_dir, "*.py")
@@ -38,6 +38,21 @@ def list_python_file_timestamps(base_dir):
         mtime = os.path.getmtime(file)
         ret.append( [file, mtime] )
         #print(f"{file}: {mtime}")
+    return ret
+
+def list_python_file_timestamps(base_dir):
+    ret = []
+
+    for root, dirs, files in os.walk(base_dir):
+        # Skip directories starting with a dot
+        dirs[:] = [d for d in dirs if not d.startswith('.')]
+
+        for file in files:
+            if file.endswith('.py'):
+                full_path = os.path.join(root, file)
+                mtime = os.path.getmtime(full_path)
+                ret.append([full_path, mtime])
+
     return ret
 
 def check_unique_program_names(data):
@@ -171,7 +186,7 @@ def run_fmake_user_program(programName):
     FileList =  find_program_rows(user_programs, programName)
 
     if len(FileList) == 0:
-        return False, user_programs
+        return None, user_programs
 
     filepath = FileList[0][0]
     functionName = FileList[0][2]
