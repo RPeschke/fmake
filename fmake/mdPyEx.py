@@ -40,9 +40,10 @@ class run_fmake_user_program:
 
 
 class Scope:
-    def __init__(self):
+    def __init__(self, exec_path = None):
         self._globals = {}
         self._locals = {}
+        self.exec_path = exec_path if exec_path is not None else os.getcwd()
                 # Create a namespace object to hold user functions
         class UserNamespace:
             pass
@@ -58,14 +59,23 @@ class Scope:
         
         self._locals["program"] = user
 
+    def run_internal(self, code):
+        original_dir = os.getcwd()
+        try:
+            os.chdir(self.exec_path)
+            exec(code, self._globals, self._locals)
+        finally:
+            os.chdir(original_dir)
+    
     def run(self, code: str):
         self._locals["disp"] = printer()
-        exec(code, self._globals, self._locals)
+        self.run_internal(code)
+        
         
     
     def disp(self, code: str):
         self._locals["disp"] = printer()
-        exec("disp(" + code + ")", self._globals, self._locals)
+        self.run_internal("disp(" + code + ")")
         return str(self._locals["disp"])
 
     def get(self, varname: str, default=None):
@@ -217,7 +227,7 @@ def handle_XML_section(tag, newscope):
     return ret4
 
 
-def update_content(content):
+def update_content(content, exec_path = None):
 
     ret1 = find_custom_mdpyex_tags(content)
     
@@ -229,7 +239,7 @@ def update_content(content):
     ret3 = clean_nested_tags(ret1)
     md_config["tags"] = ret3
 
-    newscope = Scope()
+    newscope = Scope(exec_path)
     newscope._locals["test"] = lambda : "lambda test"
 
     newscope._locals["include"] = lambda x: f'<img src={x}  alt="Description of image">'
@@ -250,7 +260,8 @@ def update_content(content):
             full_tag = x.get('full_tag', '?')
             line = content[where:].split('\n')[0]
             lineNR = len(content[:where].split('\n'))
-            raise Exception(f"Error at: {lineNR}\n{line}")
+            
+            raise Exception(f"Error at: {lineNR}\n{line}\n{e}")
         finally:
             md_config["lineNR"] = None
 
@@ -276,11 +287,12 @@ def update_content(content):
 def update_file(fileName):
     
     try:
-        md_config["filename"] = fileName
-        md_config["abs_path"] = os.path.abspath(fileName)
+        md_config["filename"]  = fileName
+        md_config["fullname"]  = os.path.abspath(fileName)
+        md_config["directory"] = os.path.dirname(md_config["fullname"])
         content = load_file(fileName)
         md_config["content"] = content
-        content1 = update_content(content)
+        content1 = update_content(content, os.path.dirname(md_config["fullname"]))
         if content != content1:
             save_file(content=content1, filename=fileName)
     except Exception as e:
@@ -290,7 +302,8 @@ def update_file(fileName):
         md_config["filename"] = None
         md_config["content"] =  None
         md_config["tags"] = None
-        md_config["abs_path"] =None
+        md_config["fullname"] =None
+        md_config["directory"] = None
 
 
 from watchdog.events import FileSystemEventHandler
