@@ -43,9 +43,20 @@ class Scope:
     def __init__(self):
         self._globals = {}
         self._locals = {}
+                # Create a namespace object to hold user functions
+        class UserNamespace:
+            pass
+
+        user = UserNamespace()
+
         userProgramsn = get_fmake_user_programs()
         for p in userProgramsn:
-            self._locals[p[2]] = run_fmake_user_program(Name= p[2], Filename = p[0])
+            func = run_fmake_user_program(Name= p[2], Filename = p[0]) 
+            name = p[2]
+
+            setattr(user, name, func)
+        
+        self._locals["program"] = user
 
     def run(self, code: str):
         self._locals["disp"] = printer()
