@@ -117,7 +117,28 @@ def generate_random_digits(length=10):
     return ''.join(random.choices('0123456789', k=length))
 
 
+
+def handle_XML_section(tag, environment):
+    ret4 = ""
+    environment["tag"] = tag
+    for k in tag["attributes"]:
+        for p  in reversed(mdPyEx_processors):
+            r = p(k, tag["attributes"][k] , environment)
+            if r is not None:
+                environment["content"] = r
+                break
+    
+    environment["tag"] = None
+    return  environment["content"]
+
+
+
+
+
+
 def extract_mdpyex_tags_with_positions(content):
+  
+
     pattern = re.compile(r"<mdpyex\s+[^>]*?/>")  # Match self-closing <mdpyex ... />
     results = []
 
@@ -136,11 +157,14 @@ def extract_mdpyex_tags_with_positions(content):
                 "attributes": element.attrib,
                 "start": int(start),
                 "end": int(end)
+
             })
         except ParseError:
             print(f"Warning: Could not parse tag: {tag}")
 
     return results
+
+
 
 
 import re
@@ -154,6 +178,7 @@ import ast
 
 
 def find_custom_mdpyex_tags(text):
+
     results = []
     
     # Pattern for opening and closing tags, capturing the full tag name and attributes
@@ -181,6 +206,7 @@ def find_custom_mdpyex_tags(text):
             "attributes": attr_dict,
             "start": int(match.start()),
             "end": int(match.end())
+
         })
 
     return results
@@ -198,33 +224,70 @@ def mdpy_processor(fun):
     return fun
 
 @mdpy_processor
-def handle_run(tag, value, scope):
+def handle_run(tag, value,environment):
     if tag!="call":
         return None
 
-    scope.run(value)
-    return ""
+    environment["scope"].run(value)
+    return environment["content"]
 
 
 @mdpy_processor
-def handle_disp(tag, value, scope):
+def handle_disp(tag, value, environment):
     if tag!="disp":
         return None
 
-    return scope.disp(value)
-
-
-
-def handle_XML_section(tag, newscope):
-    ret4 = ""
-    for k in tag["attributes"]:
-        for p  in reversed(mdPyEx_processors):
-            r = p(k, tag["attributes"][k] , newscope)
-            if r is not None:
-                ret4 += str(r)
-                break
+    ret4 =  environment["scope"].disp(value)
+    content = environment["content"]
+    if len(ret4) == 0:
+        return content
+        
+    offset = environment["offset"]
+    tag  = environment["tag"]
+    new_content = "<" + tag["full_tag"] + " "
     
-    return ret4
+    for k in tag["attributes"]:
+        new_content += k+'="' + tag["attributes"][k] + '" '
+    ret4 =  update_subcontent(ret4)
+    new_content += "/>\n" + ret4 + "\n<" + tag["full_tag"] + ' end="true"/>'
+
+        
+
+    content= content[:tag['start']+offset] + new_content + content[offset + tag["end"]:] 
+    return content
+
+
+@mdpy_processor
+def handle_block(tag, value, environment):
+    if tag!="block":
+        return None
+    
+    content = environment["content"]
+    offset = environment["offset"]
+    start = environment['tag']["start"]
+    open_tag = "\n```python\n"
+    close_tag = "\n```\n"
+    index0 = content.find(open_tag, start+offset)
+    index0a = content.find(">", start+offset)
+    index1 = content.find(close_tag, start+offset+index0+len(open_tag))
+    if abs(index0 - index0a) > 10:
+        raise Exception("Did not find open tag")
+
+    code = content[index0 +len(open_tag): index1]
+    environment["scope"].run(code)
+
+    
+    tag  = environment["tag"]
+    new_content = "<" + tag["full_tag"] + " "
+    
+    for k in tag["attributes"]:
+        new_content += k+'="' + tag["attributes"][k] + '" '
+
+    new_content += "/>\n" + open_tag + code + close_tag + "<" + tag["full_tag"] + ' end="true"/>'
+
+    closing_index = max(index1 + len(close_tag)   ,offset + tag["end"]  )
+    content= content[:tag['start']+offset] + new_content + content[closing_index:] 
+    return content
 
 
 def update_content(content, exec_path = None):
@@ -233,17 +296,20 @@ def update_content(content, exec_path = None):
     
 
     ret2 = extract_mdpyex_tags_with_positions(content)
+
+
     
 
     ret1.extend(ret2)
+
+
     ret3 = clean_nested_tags(ret1)
     md_config["tags"] = ret3
 
     newscope = Scope(exec_path)
-    newscope._locals["test"] = lambda : "lambda test"
 
-    newscope._locals["include"] = lambda x: f'<img src={x}  alt="Description of image">'
-    newscope._locals["include1"] = lambda x: f'\n![fig]({x})'
+
+    newscope._locals["include"] = lambda path, label=None: f'\n![fig]({x})'
     len_content = len(content)
 
     offset = 0
@@ -254,7 +320,11 @@ def update_content(content, exec_path = None):
             line = content[where:].split('\n')[0]
             lineNR = len(content[:where].split('\n'))
             md_config["lineNR"] = lineNR
-            ret4 = handle_XML_section(x, newscope)
+            content = handle_XML_section(x, {
+                "scope" : newscope,
+                "content" : content,
+                "offset" :offset
+            })
         except Exception as e:
             where = x.get('start', '?')
             full_tag = x.get('full_tag', '?')
@@ -266,20 +336,6 @@ def update_content(content, exec_path = None):
             md_config["lineNR"] = None
 
 
-        if len(ret4) == 0:
-            continue
-        
-        new_content = "<" + x["full_tag"] + " "
-
-        for k in x["attributes"]:
-            new_content += k+'="' + x["attributes"][k] + '" '
-        ret4 =  update_subcontent(ret4)
-        new_content += "/>\n" + ret4 + "\n<" + x["full_tag"] + ' end="true"/>'
-
-        
-
-        content= content[:x['start']+offset] + new_content + content[offset + x["end"]:] 
-        
         offset = len(content) - len_content
     
     return content
