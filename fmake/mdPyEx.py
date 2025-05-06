@@ -5,7 +5,9 @@ import random
 from fmake.vhdl_programm_list import add_program
 from fmake.user_program_runner import run_fmake_user_program,parse_args_to_kwargs, get_fmake_user_programs, get_program
 
-md_config = {}
+md_config = {
+    "onExit" : []
+}
 
 def load_file(filename):
     with open(filename, 'r', encoding='utf-8') as file:
@@ -50,8 +52,8 @@ class Scope:
 
         user = UserNamespace()
 
-        userProgramsn = get_fmake_user_programs()
-        for p in userProgramsn:
+        userPrograms = get_fmake_user_programs()
+        for p in userPrograms:
             func = run_fmake_user_program(Name= p[2], Filename = p[0]) 
             name = p[2]
 
@@ -73,7 +75,7 @@ class Scope:
         
         
     
-    def disp(self, code: str):
+    def disp(self, code: str) -> str:
         self._locals["disp"] = printer()
         self.run_internal("disp(" + code + ")")
         return str(self._locals["disp"])
@@ -119,7 +121,6 @@ def generate_random_digits(length=10):
 
 
 def handle_XML_section(tag, environment):
-    ret4 = ""
     environment["tag"] = tag
     for k in tag["attributes"]:
         for p  in reversed(mdPyEx_processors):
@@ -174,7 +175,76 @@ import re
 import ast
 
 
+def find_fmake_link(text):
+    results = []
 
+    
+    pattern = r'!\[program\.[^\]]*\]\([^\)]*\)'
+
+    for match in re.finditer(pattern, text):
+        matched_text = match.group(0)
+        start_index = match.start()
+        end_index = match.end()
+        if "uid" in matched_text:
+            uid = matched_text.split("uid")[1].split(".")[0].split("/")[0].split("\\")[0]
+        else:
+            uid  = generate_random_digits()
+
+        full_tag = "mdpyex_" + uid
+        results.append({
+            "full_tag": full_tag,
+            "uid": uid,
+            "attributes": {"mdlink" : matched_text},
+            "start": int(match.start()),
+            "end": int(match.end())
+
+        })
+        print(start_index, end_index, matched_text)
+    return results
+
+def find_matching_paren(text, start_index):
+    count = 0
+    for i in range(start_index, len(text)):
+        if text[i] == '(':
+            count += 1
+        elif text[i] == ')':
+            count -= 1
+        if count == 0:
+            return i  # Return index of matching ')'
+    return -1  # No matching parenthesis found
+
+def find_fmake_text_link(text):
+    results = []
+
+    
+    #pattern = r'\[[^\]]+\]\(#program\.[^)]+?\)'
+    pattern = r'\[[^\]]*\]\(#program\.[^\)]*\)'
+
+
+
+    for match in re.finditer(pattern, text):
+        
+        start_index = int(match.start())
+        open_bracket = text[start_index:].find("(")
+        end_index = find_matching_paren(text, start_index+open_bracket)+1
+        matched_text = text[start_index:end_index]
+        if "uid" in matched_text:
+            uid = matched_text.split("uid")[1].split(".")[0].split("/")[0].split("\\")[0].split(")")[0]
+        else:
+            uid  = generate_random_digits()
+
+        full_tag = "mdpyex_" + uid
+
+        results.append({
+            "full_tag": full_tag,
+            "uid": uid,
+            "attributes": {"mdlink_text" : matched_text},
+            "start": start_index,
+            "end": end_index
+
+        })
+        print(start_index, end_index, matched_text)
+    return results
 
 
 def find_custom_mdpyex_tags(text):
@@ -222,6 +292,48 @@ mdPyEx_processors = []
 def mdpy_processor(fun):
     mdPyEx_processors.append(fun)
     return fun
+
+
+@mdpy_processor
+def handle_mdlinks(tag, value,environment):
+    if tag!="mdlink_text":
+        return None
+
+    code = value.split("](#")[1]
+    index = code.rfind(")")
+    code = code[:index]
+   
+    ret4 =  environment["scope"].disp(code)
+    content = environment["content"]
+    if len(ret4) == 0:
+        return content
+        
+    offset = environment["offset"]
+    tag  = environment["tag"]
+    new_content = "[" + ret4 +"](#" + code +")"
+
+    content= content[:tag['start']+offset] + new_content + content[offset + tag["end"]:] 
+    return content
+
+@mdpy_processor
+def handle_mdlinks(tag, value,environment):
+    if tag!="mdlink":
+        return None
+
+    code = value.split("![")[1].split("]")[0]
+   
+    ret4 =  environment["scope"].disp(code)
+    content = environment["content"]
+    if len(ret4) == 0:
+        return content
+        
+    offset = environment["offset"]
+    tag  = environment["tag"]
+    new_content = "![" + code +"](" + ret4 +")"
+
+    content= content[:tag['start']+offset] + new_content + content[offset + tag["end"]:] 
+    return content
+
 
 @mdpy_processor
 def handle_run(tag, value,environment):
@@ -296,11 +408,14 @@ def update_content(content, exec_path = None):
     
 
     ret2 = extract_mdpyex_tags_with_positions(content)
-
-
+    
+    ret3 = find_fmake_link(content)
+    ret4 = find_fmake_text_link(content)
     
 
     ret1.extend(ret2)
+    ret1.extend(ret3)
+    ret1.extend(ret4)
 
 
     ret3 = clean_nested_tags(ret1)
@@ -309,12 +424,13 @@ def update_content(content, exec_path = None):
     newscope = Scope(exec_path)
 
 
-    newscope._locals["include"] = lambda path, label=None: f'\n![fig]({x})'
+    
     len_content = len(content)
 
     offset = 0
     for x in ret3:
         try:
+            md_config["tag"] = x
             where = x.get('start', '?')
             full_tag = x.get('full_tag', '?')
             line = content[where:].split('\n')[0]
@@ -334,6 +450,7 @@ def update_content(content, exec_path = None):
             raise Exception(f"Error at: {lineNR}\n{line}\n{e}")
         finally:
             md_config["lineNR"] = None
+            md_config["tag"] = None
 
 
         offset = len(content) - len_content
@@ -401,6 +518,8 @@ def markdown_monitor(path):
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
+        for x in md_config["onExit"]:
+            x()
         observer.stop()
         observer.join()
 
