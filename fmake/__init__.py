@@ -26,3 +26,5 @@ from fmake.generic_helper import get_project_directory
 from fmake.user_program_runner import program, config, get_program
 
 from fmake.mdPyEx import markdown_monitor, md_config
+
+import fmake.make_powershell_bindings 

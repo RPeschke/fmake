@@ -3,7 +3,7 @@ from xml.etree.ElementTree import fromstring, ParseError
 import random
 
 from fmake.vhdl_programm_list import add_program
-from fmake.user_program_runner import run_fmake_user_program,parse_args_to_kwargs, get_fmake_user_programs, get_program
+from fmake.user_program_runner import parse_args_to_kwargs, get_fmake_user_programs, get_program
 
 md_config = {
     "onExit" : []
@@ -20,6 +20,59 @@ def save_file(filename, content):
         file.write(content)
 
 
+import os
+import inspect
+
+# Define a unique exception type for this specific case
+class NoFileChangeDetected(BaseException):
+    """Raised when the source file has not changed since the last check."""
+    pass
+
+_last_mod_times = {}
+
+def assert_files_have_changed_since_last_call(items):
+    """
+    Checks whether any file in the list of strings has changed since the last check.
+    Strings that are not valid existing files are ignored.
+    """
+    changed = False
+
+    for item in items:
+        if not os.path.isfile(item):
+            continue  # Skip non-files
+
+        current_mtime = os.path.getmtime(item)
+        last_mtime = _last_mod_times.get(item)
+
+        _last_mod_times[item] = current_mtime
+
+        if last_mtime is None or current_mtime != last_mtime:
+            changed = True
+
+    return changed
+    
+
+def depends_on(dependencies):
+    # Get the filename of the caller
+    frame = inspect.currentframe().f_back
+    filename = inspect.getfile(frame)
+    func_name = frame.f_code.co_name
+    key = f"{filename}#{func_name}"
+    try:
+        current_mtime = os.path.getmtime(filename)
+    except FileNotFoundError:
+        return  # Skip if the file is missing
+
+    last_mtime = _last_mod_times.get(key)
+    _last_mod_times[key] = current_mtime
+
+    # If it's the first call, or file has changed, do nothing
+    if last_mtime is None or current_mtime != last_mtime:
+        return
+
+    # If nothing has changed, raise a special exception
+    raise NoFileChangeDetected(f"No change detected in {filename}")
+
 class printer:
     def __init__(self):
         self.content = ""
@@ -32,7 +85,7 @@ class printer:
     def __str__(self):
         return self.content
 
-class run_fmake_user_program:
+class run_fmake_user_program_CL:
     def __init__(self, Name, Filename=None):
         self.Name = Name
         self.Filename = Filename
@@ -54,7 +107,7 @@ class Scope:
 
         userPrograms = get_fmake_user_programs()
         for p in userPrograms:
-            func = run_fmake_user_program(Name= p[2], Filename = p[0]) 
+            func = run_fmake_user_program_CL(Name= p[2], Filename = p[0]) 
             name = p[2]
 
             setattr(user, name, func)

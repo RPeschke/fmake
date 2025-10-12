@@ -16,6 +16,11 @@ class constants:
     xise_prototype_url =  "https://raw.githubusercontent.com/RPeschke/fmake/main/proto_build/simpleTemplate.xise.in"
     empty_testbench_xlsm_URL = "https://github.com/RPeschke/fmake/raw/main/proto_build/empty_testbench.xlsm"
 
+
+
+g_vars = {"project_directory": None, 
+          "build_directory": None}
+
 class verbose_printer_cl:
     def __init__(self) -> None:
         self.level = 0
@@ -254,7 +259,22 @@ def get_build_directory():
     raise Exception("unable to find build directory")
 
 
+
+
+
+
+def set_project_directory(path):
+    if not os.path.isdir(path):
+        raise Exception("project directory is not a valid directory", path)
+    g_vars["project_directory"] = path
+
 def get_project_directory():
+    if g_vars["project_directory"] is not None:
+        #check if this is a valid directory
+        if os.path.isdir(g_vars["project_directory"]):
+            return g_vars["project_directory"]
+        else:
+            raise Exception("project directory is not a valid directory", g_vars["project_directory"])
     try:
         build = get_build_directory()
         return os.path.abspath(build + "/../" )

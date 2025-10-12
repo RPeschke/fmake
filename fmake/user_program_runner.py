@@ -25,6 +25,12 @@ def find_fmake_program_functions(file_path):
         contents = f.read()
     return pattern.findall(contents)
 
+def find_fmake_target_functions(file_path):
+    pattern = re.compile(r"@fmake\.target\s*\n\s*def\s+(\w+)\s*\(")
+    with open(file_path, "r") as f:
+        contents = f.read()
+    return pattern.findall(contents)
+
 
 def list_python_file_timestamps_one_level_down(base_dir):
     # Get all .py files in base_dir and one level down
@@ -133,7 +139,7 @@ def parse_args_to_kwargs(arglist):
     while i < len(arglist):
         if arglist[i].startswith("--"):
             key = arglist[i][2:]  # remove leading '--'
-            value = arglist[i + 1]
+            value = arglist[i + 1] if i + 1 < len(arglist) else ""
             kwargs[key] = value
             i += 2
         else:
@@ -204,6 +210,9 @@ def run_fmake_user_program(programName):
 
 
 def program(func):
+    return func
+
+def target(func):
     return func
 
 
