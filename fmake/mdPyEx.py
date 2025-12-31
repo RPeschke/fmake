@@ -113,6 +113,7 @@ class Scope:
             setattr(user, name, func)
         
         self._locals["program"] = user
+        self.run_internal("mdenv = {}")
 
     def run_internal(self, code):
         original_dir = os.getcwd()
@@ -374,6 +375,8 @@ def handle_mdlinks(tag, value,environment):
         return None
 
     code = value.split("![")[1].split("]")[0]
+    last_return  = value.split("](")[1].split(")")[0]
+    environment["scope"]._locals["mdenv"]["last_return"] = last_return
    
     ret4 =  environment["scope"].disp(code)
     content = environment["content"]
