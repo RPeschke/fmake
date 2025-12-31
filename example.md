@@ -8,7 +8,7 @@ class myclass:
         self.my_val = "hello world from my class123"
 
     def do_something(self):
-        return "something else"
+        return "something else very much else"
 my = myclass()
 
 
@@ -20,15 +20,15 @@ my = myclass()
 
 
 <mdpyexL0U1380879503 disp="my.do_something()" />
-something else
+something else very much else
 <mdpyexL0U1380879503 end="true"/>
 
-asdadwqeads![program.example2()](123)asdasdasd
+asdadwqeads![program.example2()](2023_10_27_31472054684398ca1967g-3.jpg)asdasdasd
 
 
-[123](#program.example2())dfsdfsd
+[123AgainAgain](#program.example2())dfsdfsd
 
-[![program.example2()](123)](#test)
+[![program.draw_picture()](123.png)](#test)
 
 # test
 

@@ -73,17 +73,7 @@ def depends_on(dependencies):
     # If nothing has changed, raise a special exception
     raise NoFileChangeDetected(f"No change detected in {filename}")
 
-class printer:
-    def __init__(self):
-        self.content = ""
-    
-    def __call__(self, arg):
-        if arg is None:
-            return 
-        self.content += str(arg)
-    
-    def __str__(self):
-        return self.content
+
 
 class run_fmake_user_program_CL:
     def __init__(self, Name, Filename=None):
@@ -113,26 +103,26 @@ class Scope:
             setattr(user, name, func)
         
         self._locals["program"] = user
-        self.run_internal("mdenv = {}")
+        self.run_internal("import fmake")
 
     def run_internal(self, code):
         original_dir = os.getcwd()
         try:
             os.chdir(self.exec_path)
-            exec(code, self._globals, self._locals)
+            x = exec(code, self._globals, self._locals)
         finally:
             os.chdir(original_dir)
     
     def run(self, code: str):
-        self._locals["disp"] = printer()
+        
         self.run_internal(code)
         
         
     
     def disp(self, code: str) -> str:
-        self._locals["disp"] = printer()
-        self.run_internal("disp(" + code + ")")
-        return str(self._locals["disp"])
+
+        self.run_internal("___code_return____ = " + code )
+        return str(self._locals["___code_return____"])
 
     def get(self, varname: str, default=None):
         return self._locals.get(varname, default)
@@ -356,10 +346,18 @@ def handle_mdlinks(tag, value,environment):
     code = value.split("](#")[1]
     index = code.rfind(")")
     code = code[:index]
+    
+    last_return  = value.split("[")[1].split("](")[0]
+    environment["scope"]._locals["mdenv"] = {"last_return": last_return,
+                                             "tag": tag,
+                                              "value": value
+                                             }
+    environment["scope"].run_internal("fmake.mdenv = mdenv")
    
     ret4 =  environment["scope"].disp(code)
     content = environment["content"]
     if len(ret4) == 0:
+        environment["scope"].run_internal("fmake.mdenv.clear()")
         return content
         
     offset = environment["offset"]
@@ -367,6 +365,7 @@ def handle_mdlinks(tag, value,environment):
     new_content = "[" + ret4 +"](#" + code +")"
 
     content= content[:tag['start']+offset] + new_content + content[offset + tag["end"]:] 
+    environment["scope"].run_internal("fmake.mdenv.clear()")
     return content
 
 @mdpy_processor
@@ -376,11 +375,16 @@ def handle_mdlinks(tag, value,environment):
 
     code = value.split("![")[1].split("]")[0]
     last_return  = value.split("](")[1].split(")")[0]
-    environment["scope"]._locals["mdenv"]["last_return"] = last_return
+    environment["scope"]._locals["mdenv"] = {"last_return": last_return,
+                                             "tag": tag,
+                                              "value": value
+                                             }
+    environment["scope"].run_internal("fmake.mdenv = mdenv")
    
     ret4 =  environment["scope"].disp(code)
     content = environment["content"]
     if len(ret4) == 0:
+        environment["scope"].run_internal("fmake.mdenv.clear()")
         return content
         
     offset = environment["offset"]
@@ -388,6 +392,7 @@ def handle_mdlinks(tag, value,environment):
     new_content = "![" + code +"](" + ret4 +")"
 
     content= content[:tag['start']+offset] + new_content + content[offset + tag["end"]:] 
+    environment["scope"].run_internal("fmake.mdenv.clear()")
     return content
 
 

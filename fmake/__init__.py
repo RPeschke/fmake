@@ -29,3 +29,5 @@ from fmake.mdPyEx import markdown_monitor, md_config
 
 import fmake.make_powershell_bindings 
 import fmake.make_bash_bindings
+
+mdenv = {}
