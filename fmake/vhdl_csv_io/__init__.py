@@ -4,3 +4,4 @@ from fmake.vhdl_csv_io.e_csv_read_file import e_csv_read_file
 from fmake.vhdl_csv_io.e_csv_write_file import e_csv_write_file
 from fmake.vhdl_csv_io.type_conversions_helper import type_conversions_helper
 from fmake.vhdl_csv_io.csv_text_io_poll import csv_text_io_poll
+from fmake.vhdl_csv_io.csv_register_interface import csv_register_interface

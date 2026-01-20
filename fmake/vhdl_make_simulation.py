@@ -11,6 +11,25 @@ from fmake.generic_helper import constants
 
 from fmake.generic_helper import  vprint, extract_cl_arguments
 
+def make_query_pkg(packagename, path):
+    return """
+
+
+library ieee;
+  use ieee.std_logic_1164.all;
+  use ieee.numeric_std.all;
+
+package {packagename} is
+
+    constant query_folder           : string  := "{path}/";
+
+end package;
+
+""".format(
+        packagename=packagename, 
+        path=  path 
+    )
+
 def vhdl_make_simulation_intern(entity,BuildFolder = constants.default_build_folder ):  
     OutputPath = BuildFolder + entity + "/"
     
@@ -22,22 +41,27 @@ def vhdl_make_simulation_intern(entity,BuildFolder = constants.default_build_fol
     save_file(CSV_readFile,"")
     save_file(CSV_writeFile,"")
     save_file(OutputPath+"clock_speed.txt","10")
+    query_folder = OutputPath+ constants.text_IO_polling + "/"
     
-    try_make_dir(OutputPath+ constants.text_IO_polling)
+    try_make_dir(query_folder)
     
 
 
-    save_file(OutputPath+ constants.text_IO_polling +"/"+ constants.text_io_polling_send_lock_txt ,"0")
-    save_file(OutputPath+ constants.text_IO_polling +"/"+ constants.text_io_polling_receive_lock_txt ,
+    save_file(query_folder + constants.text_io_polling_send_lock_txt ,"0")
+    save_file(query_folder + constants.text_io_polling_receive_lock_txt ,
 """Time, N
 0,     0
 """)
-    save_file(OutputPath+ constants.text_IO_polling + "/"+ constants.text_io_polling_send_txt,    "")
-    save_file(OutputPath+ constants.text_IO_polling + "/"+ constants.text_io_polling_receive_txt ,"")    
+    save_file(query_folder + constants.text_io_polling_send_txt,    "")
+    save_file(query_folder + constants.text_io_polling_receive_txt ,"")    
 
    
-
-
+    save_file(query_folder +  entity + "_text_io_query_pkg.vhd",
+               make_query_pkg( 
+                   packagename=entity+"_text_io_query_pkg",
+                   path= os.path.abspath( query_folder ).replace("\\","/")   
+               )
+    )
 
 
 
