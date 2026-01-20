@@ -1,5 +1,6 @@
 csv_register_interface = """
 
+
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
@@ -31,10 +32,10 @@ end entity;
 architecture rtl of csv_register_interface is
 
   function generate_header(N : integer) return string is
-    variable result : string(1 to N * 4 - 1) := (others => ' ');
+    variable result : string(1 to N * 5 - 1) := (others => ' ');
     variable pos    : integer                := 1;
   begin
-    for i in 1 to N loop
+    for i in 0 to N - 1 loop
       if i < 10 then
         result(pos) := 'x';
         result(pos + 1) := character'val(character'pos('0') + i);
@@ -45,7 +46,7 @@ architecture rtl of csv_register_interface is
         result(pos + 2) := character'val(character'pos('0') + (i mod 10));
         pos := pos + 3;
       end if;
-      if i < N then
+      if i < N - 1 then
         result(pos) := ',';
         pos := pos + 1;
       end if;
@@ -148,5 +149,6 @@ begin
   csv_from_integer(read_Rows(1), reg_value);
 
 end architecture;
+
 
 """

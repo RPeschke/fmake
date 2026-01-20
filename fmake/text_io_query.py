@@ -189,7 +189,16 @@ class vhdl_file_io:
         print("read_file: error: unable to read after N tries: receive_FileName:  ", self.receive_FileName )
 
 
-    
+    def query_register(self, addr, data):
+        if pd.api.types.is_list_like(data):
+            addr = [addr  for _ in range(len(data))]
+            n = [i  for i in range(len(data))]
+            df = pd.DataFrame( {"addr": addr , "value" : data, "n": n } )
+            return self.query(df)
+        else:
+            df = pd.DataFrame( {"addr": [addr] , "value" : [data], "n": [0] } )
+            return self.query(df)
+
 
 
 def text_io_query(entity, prefix = None,  columns=None, build = None ):
