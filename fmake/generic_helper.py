@@ -10,7 +10,11 @@ class constants:
     text_io_polling_receive_txt      = "receive.txt"
     text_io_polling_receive_lock_txt = "receive_lock.txt"
 
+    env_FMAKEBUILD = "FMAKEBUILD"
+    env_PROJECTDIRECTORY = "FMAKEPROJECT"
+
     default_build_folder = "build/"
+    alternative_build_folder = "fbuild/"
     fmake_filename = "fmake.txt"
     proto_Project_url  =  "https://raw.githubusercontent.com/RPeschke/fmake/main/proto_build/proto_Project.in"
     xise_prototype_url =  "https://raw.githubusercontent.com/RPeschke/fmake/main/proto_build/simpleTemplate.xise.in"
@@ -249,11 +253,23 @@ def join_str(content, start="",end="",LineEnding="",Delimeter="",LineBeginning="
 
 
 def get_build_directory():
+    env_build_folder = os.environ.get(constants.env_FMAKEBUILD)
+    if env_build_folder:
+        if os.path.isdir(env_build_folder):
+            return env_build_folder
+        raise Exception(f"{constants.env_FMAKEBUILD} path does not exist", env_build_folder)
+
     prefix = ""
     fmake_file = constants.default_build_folder+"/"+constants.fmake_filename
     for i in range(100):
         if os.path.isfile(prefix+fmake_file):
             return os.path.abspath(prefix+ constants.default_build_folder + "/")
+        prefix+="../"
+    
+    fmake_file = constants.alternative_build_folder+"/"+constants.fmake_filename
+    for i in range(100):
+        if os.path.isfile(prefix+fmake_file):
+            return os.path.abspath(prefix+ constants.alternative_build_folder + "/")
         prefix+="../"
 
     raise Exception("unable to find build directory")
@@ -261,6 +277,32 @@ def get_build_directory():
 
 
 
+import os
+
+def find_git_root(start_path=None):
+    """
+    Searches upward from the given path (or current working directory)
+    for a .git *folder*. Returns the path to the folder containing .git,
+    or None if not found.
+    """
+    if start_path is None:
+        start_path = os.getcwd()
+
+    current = os.path.abspath(start_path)
+
+    while True:
+        git_path = os.path.join(current, ".git")
+
+        # Must be a directory, not a file
+        if os.path.isdir(git_path):
+            return current
+
+        # Stop at filesystem root
+        parent = os.path.dirname(current)
+        if parent == current:
+            return None
+
+        current = parent
 
 
 def set_project_directory(path):
@@ -269,6 +311,12 @@ def set_project_directory(path):
     g_vars["project_directory"] = path
 
 def get_project_directory():
+    env_project_folder = os.environ.get(constants.env_PROJECTDIRECTORY)
+    if env_project_folder:
+        if os.path.isdir(env_project_folder):
+            return env_project_folder
+        raise Exception(f"{constants.env_PROJECTDIRECTORY} path does not exist", env_project_folder)
+
     if g_vars["project_directory"] is not None:
         #check if this is a valid directory
         if os.path.isdir(g_vars["project_directory"]):
@@ -279,5 +327,11 @@ def get_project_directory():
         build = get_build_directory()
         return os.path.abspath(build + "/../" )
     except:
-        return os.path.abspath(".")
+        pass
+
+    git_root = find_git_root()    
+    if git_root:
+        return git_root
+
+    return os.path.abspath(".")
     

@@ -2,7 +2,7 @@ import sys
 from fmake.vhdl_programm_list import get_function,  print_list_of_programs
 from fmake import get_project_directory
 from pathlib import Path
-from fmake.user_program_runner import run_fmake_user_program,parse_args_to_kwargs
+from fmake.user_program_runner import run_fmake_user_program, parse_args_to_kwargs, print_user_program_table
 from fmake.generic_helper import set_project_directory
 import inspect
 
@@ -29,8 +29,7 @@ def handle_not_enough_arguments():
         print_list_of_programs(printer= print)
         _, user_programs = run_fmake_user_program("")
         print("\n\nUser programs:")
-        for f,_,p in user_programs:
-            print("File: " + f + ", program: " + p)
+        print_user_program_table(user_programs)
         return True
 
     return False
@@ -82,8 +81,7 @@ def handle_unknown_program():
     print_list_of_programs(printer= print)
     print("\n\nUser programs:")
     fun, user_programs = run_fmake_user_program("")
-    for f,_,p in user_programs:
-        print("File: " + f + ", program: " + p)
+    print_user_program_table(user_programs)
 
     
 

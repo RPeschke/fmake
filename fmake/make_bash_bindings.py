@@ -47,7 +47,7 @@ def make_bash_bindings(x):
     args = parser.parse_args(x[2:])  # skip program name
     fun, user_programs = run_fmake_user_program("")
     projectdir = get_project_directory()
-    ret = ""
+    ret = "#usage:\n#source <(fmake make-bash)\n\n\n"
 
     if not args.export_builtin_functions:
         for f,_,p in user_programs:

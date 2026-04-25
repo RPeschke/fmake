@@ -1,4 +1,5 @@
 
+from matplotlib import lines
 import pandas as pd
 from .vhdl_parser import vhdl_parse_folder 
 
@@ -116,6 +117,16 @@ class dependency_db_cl:
             lines += 'vhdl work "../../' + k + '"\n'
         save_file(OutputFile, lines)
         self.filelist  = fileList
+
+
+        OutputFileMK =  "build/" +Entity+"/"+Entity+".mk"
+        
+        linesmk = "THIS_MK_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))\n"
+        linesmk += "VHDL_SOURCES =  \\\n"
+        for k in fileList:
+            linesmk += '$(THIS_MK_DIR)/../../' + k + '\\\n'
+        save_file(OutputFileMK, linesmk)
+        
         return fileList
 
 

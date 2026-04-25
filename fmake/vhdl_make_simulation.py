@@ -82,7 +82,50 @@ def extract_header_from_top_file(Entity, FileName,BuildFolder):
     vprint(1)("=======Done Extracting Header From File====")
 
 
-def vhdl_make_simulation(Entity,BuildFolder = constants.default_build_folder):
+cocotb_make = """
+.SILENT:
+MAKEFLAGS += --no-print-directory
+
+TOPLEVEL_LANG = vhdl
+SIM = ghdl
+TOPLEVEL = {Entity}
+
+
+
+PYTHONPATH = {cocotb_dir}
+export PYTHONPATH
+
+COCOTB_TEST_MODULES = {cocotb_basename}
+
+
+include ./{Entity}.mk
+
+SIM_ARGS += --fst=waves.fst
+GHDL_ARGS = --std=08
+
+
+# noise suppression
+export COCOTB_LOG_LEVEL=ERROR
+export GPI_LOG_LEVEL=ERROR
+export PYDEVD_DISABLE_FILE_VALIDATION=1
+
+include $(shell cocotb-config --makefiles)/Makefile.sim
+
+"""
+def vhdl_make_simulation(Entity, cocotb=None, BuildFolder = constants.default_build_folder):
+    if cocotb is not None:
+        cocotb_dir = os.path.abspath(os.path.dirname(cocotb))
+        cocotb_basename = os.path.splitext(os.path.basename(cocotb))[0]
+        vprint(1)("Cocotb directory:", cocotb_dir)
+        vprint(1)("Cocotb basename:", cocotb_basename)
+
+        save_file(BuildFolder+Entity+ "/Makefile", cocotb_make.format(
+            cocotb_dir= cocotb_dir,
+            cocotb_basename= cocotb_basename,
+            Entity= Entity
+        ))
+
+
 
 
     fileList = get_dependency_db().get_dependencies_and_make_project_file(Entity)
@@ -90,6 +133,8 @@ def vhdl_make_simulation(Entity,BuildFolder = constants.default_build_folder):
         vprint(1)("unable to find entity: ", Entity)
         return 
     
+    
+
     extract_header_from_top_file(Entity, fileList[0],BuildFolder)
 
 
@@ -99,9 +144,10 @@ def vhdl_make_simulation(Entity,BuildFolder = constants.default_build_folder):
 def vhdl_make_simulation_wrap(x):
     parser = argparse.ArgumentParser(description='make project files etc. for the simulation')
     cl_add_entity(parser)
+    parser.add_argument('--cocotb', type=str, help='Path to Python cocotb file for this entity')
     args = extract_cl_arguments(parser= parser,x=x)
     vprint(0)('Make-Simulation for Entity: ' , args.entity)
-    vhdl_make_simulation(args.entity)
+    vhdl_make_simulation(args.entity, args.cocotb)
     vprint(0)('Done Make-Simulation')
     
     

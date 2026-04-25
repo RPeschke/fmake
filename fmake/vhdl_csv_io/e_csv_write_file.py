@@ -66,7 +66,7 @@ begin
           if empty_line > 0 then
             for i in 0 to empty_line - 1 loop
               write(currentline, 0, right, Integer_width);
-              for i in 0 to NUM_COL - 1 loop
+              for j in 0 to NUM_COL - 1 loop
                 write(currentline, string'(", "));
                 write(currentline, 0, right, Integer_width);
 

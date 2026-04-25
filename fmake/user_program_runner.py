@@ -1,7 +1,9 @@
+import atexit
 import os
 import glob
 from datetime import datetime
 import re
+import threading
 
 import importlib.util
 import sys
@@ -17,18 +19,39 @@ import importlib.util
 import os
 import sys
 from pathlib import Path
+from functools import lru_cache
+import dataframe_helpers as dfh
 
+
+import re
 
 def find_fmake_program_functions(file_path):
-    pattern = re.compile(r"@fmake\.program\s*\n\s*def\s+(\w+)\s*\(")
-    with open(file_path, "r") as f:
-        contents = f.read()
+    """
+    Finds functions decorated with @fmake.program or #@fmake.program,
+    supporting both sync and async functions.
+    Returns a list of function names.
+    """
+    pattern = re.compile(
+        r"(?:#?@fmake\.program)\s*\n\s*(?:async\s+)?def\s+(\w+)\s*\("
+    )
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            contents = f.read()
+    except UnicodeDecodeError:
+        return []
+
     return pattern.findall(contents)
+
+
 
 def find_fmake_target_functions(file_path):
     pattern = re.compile(r"@fmake\.target\s*\n\s*def\s+(\w+)\s*\(")
-    with open(file_path, "r") as f:
-        contents = f.read()
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            contents = f.read()
+    except UnicodeDecodeError:
+        return []
     return pattern.findall(contents)
 
 
@@ -81,6 +104,59 @@ def check_unique_program_names(data):
     
 def find_program_rows(data, program_name):
     return [row for row in data if len(row) >= 3 and row[2] == program_name]
+
+
+def _is_subpath(path_obj, base_dir_obj):
+    try:
+        path_obj.relative_to(base_dir_obj)
+        return True
+    except ValueError:
+        return False
+
+
+def _get_callsite_script_path():
+    this_file = Path(__file__).resolve()
+    for frame in inspect.stack()[2:]:
+        frame_path = Path(frame.filename).resolve()
+        if frame_path != this_file:
+            return frame_path
+    return None
+
+
+def _filter_rows_for_callsite_subfolder(file_list):
+    if len(file_list) <= 1:
+        return file_list
+
+    callsite = _get_callsite_script_path()
+    if callsite is None:
+        return file_list
+
+    project_parent = Path(fmake.get_project_directory()).resolve()
+    search_dir = callsite.parent.resolve()
+    while True:
+        filtered = []
+        for row in file_list:
+            row_path = Path(row[0]).resolve()
+            if _is_subpath(row_path, search_dir):
+                filtered.append(row)
+
+        if len(filtered) > 0:
+            return filtered
+
+        if search_dir == project_parent:
+            # Reached the configured search ceiling.
+            return file_list
+
+        parent = search_dir.parent
+        if parent == search_dir:
+            # Reached filesystem root without finding scoped matches.
+            #make an assert here. this should never happen since it should always be stopped by the project parent 
+            assert False, "Reached filesystem root without finding scoped matches."
+            
+        if not _is_subpath(parent, project_parent):
+            # Do not walk above the parent of project directory.
+            return file_list
+        search_dir = parent
 
 def import_from_filepath_full(filepath):
     # Extract module name from filepath
@@ -147,33 +223,147 @@ def parse_args_to_kwargs(arglist):
             i += 1
     return args, kwargs
 
+
+def print_user_program_table(user_programs, printer=print):
+    rows = [row for row in user_programs if len(row) >= 3]
+    rows.sort(key=lambda row: (row[2].lower(), row[0].lower()))
+
+    program_width = max(len("Program"), *(len(row[2]) for row in rows)) if rows else len("Program")
+
+    printer(f"{'Program'.ljust(program_width)}  File")
+    printer(f"{'-' * program_width}  {'-' * 4}")
+
+    for file_path, _, program_name in rows:
+        printer(f"{program_name.ljust(program_width)}  {file_path}")
+
+
+
+
+class user_program_finder_t:
+    def __init__(self):
+        current_file = os.path.abspath(__file__)
+        self.user_programs_buffer_file = current_file + ".buffer.pkl"
+        if not os.path.exists(self.user_programs_buffer_file):
+            dfh.pkl_save({}, self.user_programs_buffer_file)
+
+        self.user_programs_buffer  = dfh.pkl_load(self.user_programs_buffer_file)
+        self.programs_buffered = self.user_programs_buffer.get(fmake.get_project_directory() , [])
+        self.running = True
+
+        self.programs = []
+        self.program_thread = threading.Thread(target=self.get_fmake_user_programs, daemon=True)
+        self.program_thread.start()
+        atexit.register(self._on_exit)
+
+    def _on_exit(self):
+        self.running = False
+        self.program_thread.join()
+
+    def find_program_rows(self, program_name):
+        b =  [row for row in self.programs_buffered if len(row) >= 3 and row[2] == program_name]
+        if len(b) > 0:
+            return b
+        self.wait_for_programs()
+        return [row for row in self.programs if len(row) >= 3 and row[2] == program_name]
+
+    def find_program_and_file_rows(self, program_name, file_name):
+        b =  [row for row in self.programs_buffered if len(row) >= 3 and row[2] == program_name and row[0] == file_name]
+        if len(b) > 0:
+            return b
+        self.wait_for_programs()
+        return [row for row in self.programs if len(row) >= 3 and row[2] == program_name and row[0] == file_name]
+
+
+    def wait_for_programs(self):
+        """Wait for the background thread to complete loading programs"""
+        self.program_thread.join()
+        return self.programs
+
+    def get_fmake_user_programs(self):
+        
+        project_dir = fmake.get_project_directory()
+        files = self.list_python_file_timestamps(project_dir)
+        for f in files:
+            if not self.running:
+                return None
+            programs  = find_fmake_program_functions(f[0])
+            for p in programs:
+                self.programs.append(
+                    [f[0], f[1] , p ]
+                )
+        if not self.running:
+            return None 
+        self.user_programs_buffer  = dfh.pkl_load(self.user_programs_buffer_file)
+        if self.user_programs_buffer.get(project_dir) == self.programs:
+            return self.programs
+        self.user_programs_buffer[project_dir] = self.programs
+        dfh.pkl_save(self.user_programs_buffer, self.user_programs_buffer_file)
+        self.programs_buffered  = self.programs
+        return self.programs
+    
+    def list_python_file_timestamps(self, base_dir):
+        ret = []
+
+        for root, dirs, files in os.walk(base_dir):
+            if not self.running:
+                return []
+            # Skip directories starting with a dot
+            dirs[:] = [d for d in dirs if not d.startswith('.')]
+
+            for file in files:
+                if file.endswith('.py'):
+                    full_path = os.path.join(root, file)
+                    mtime = 0  #os.path.getmtime(full_path)
+                    ret.append([full_path, mtime])
+
+        return ret
+
+user_program_finder_t_instance = user_program_finder_t()
+
+def user_programs_refresh():
+    if user_program_finder_t_instance.program_thread.is_alive():
+        user_program_finder_t_instance.wait_for_programs()
+        return
+    
+    user_program_finder_t_instance.running = True
+    user_program_finder_t_instance.get_fmake_user_programs()
+    user_program_finder_t_instance.running = False
+
+
 def get_fmake_user_programs():
-    files = list_python_file_timestamps(fmake.get_project_directory())
-    ret = []
+    user_program_finder_t_instance.wait_for_programs()
+    return user_program_finder_t_instance.programs
 
-    for f in files:
-        programs  = find_fmake_program_functions(f[0])
-        for p in programs:
-            ret.append(
-                [f[0], f[1] , p ]
+def get_program(Name, fullpath = None,file = None, unique = False):
+
+    if fullpath is None:
+        if file is not None:
+            FileList =  user_program_finder_t_instance.find_program_and_file_rows(Name, file)
+        else:
+            FileList =  user_program_finder_t_instance.find_program_rows(Name)
+        
+        if unique and len(FileList) > 1:
+            raise Exception(
+                f"Program '{Name}' is not unique for this call site: "
+                f"{[row[0] for row in FileList]}"
             )
-    return ret
 
-def get_program(Name, file = None):
-    if file is None:
-        user_programs = get_fmake_user_programs()
-        if not check_unique_program_names(user_programs ):
-            raise Exception("Programs are not unique")
-            
-        FileList =  find_program_rows(user_programs, Name)
+        if len(FileList) > 1:
+            FileList = _filter_rows_for_callsite_subfolder(FileList)
 
         if len(FileList) == 0:
             raise Exception("Program Not Found")
 
-        file = FileList[0][0]
+        if len(FileList) > 1:
+            raise Exception(
+                f"Program '{Name}' is ambiguous for this call site: "
+                f"{[row[0] for row in FileList]}"
+            )
+
+        fullpath = FileList[0][0]
     
     
-    module = load_and_run_module(file  )
+    module = load_and_run_module(fullpath  )
 
     if not hasattr(module, Name):
         raise Exception("Program Not Found")
@@ -185,13 +375,14 @@ def get_program(Name, file = None):
 def run_fmake_user_program(programName):
 
 
-    user_programs = get_fmake_user_programs()
-    if not check_unique_program_names(user_programs ):
-        return None, user_programs
+    
+    
         
-    FileList =  find_program_rows(user_programs, programName)
+    FileList =  user_program_finder_t_instance.find_program_rows(programName)
 
     if len(FileList) == 0:
+        user_program_finder_t_instance.wait_for_programs()
+        user_programs =  user_program_finder_t_instance.programs
         return None, user_programs
 
     filepath = FileList[0][0]
@@ -200,12 +391,14 @@ def run_fmake_user_program(programName):
 
 
     if not hasattr(module, functionName):
+        user_program_finder_t_instance.wait_for_programs()
+        user_programs =  user_program_finder_t_instance.programs
         return None, user_programs
     
 
     config.Execution_Path = os.getcwd()
     fun = getattr(module, functionName) # (*args, **kwargs)  # Call the function
-    return fun, user_programs
+    return fun, None
 
 
 
