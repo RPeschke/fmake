@@ -26,6 +26,7 @@ def make_build_wrap(x):
     save_file(build + "/vhdl_csv_io/csv_text_io_poll.vhd",  csv_io.csv_text_io_poll)
     save_file(build + "/vhdl_csv_io/csv_register_interface.vhd",  csv_io.csv_register_interface)
     
+    save_file(build + "/vhdl_csv_io/fmake_csv_IO.py",  csv_io.fmake_csv_IO_py)
     
     
     

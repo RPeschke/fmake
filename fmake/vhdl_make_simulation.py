@@ -30,7 +30,37 @@ end package;
         path=  path 
     )
 
+
+def make_simulation_query_interface(entity, BuildFolder = constants.default_build_folder):
+    OutputPath = BuildFolder + entity + "/"
+    query_folder = OutputPath+ constants.text_IO_polling + "/"
+    
+    try_make_dir(query_folder)
+    
+    save_file(query_folder + constants.text_io_polling_send_lock_txt ,"0")
+    save_file(query_folder + constants.text_io_polling_receive_lock_txt ,
+"""Time, N
+0,     0
+""")
+    save_file(query_folder + constants.text_io_polling_send_txt,    "")
+    save_file(query_folder + constants.text_io_polling_receive_txt ,"")    
+
+    query_pkl = query_folder + entity + "_text_io_query_pkg.vhd"
+    save_file(query_pkl,
+               make_query_pkg( 
+                   packagename=entity+"_text_io_query_pkg",
+                   path= os.path.abspath( query_folder ).replace("\\","/")   
+               )
+    )
+    ret = {}
+    ret["OutputPath"] = OutputPath
+    ret["query_folder"] = query_folder
+    ret["query_pkl"] = query_pkl
+    return ret
+
+
 def vhdl_make_simulation_intern(entity,BuildFolder = constants.default_build_folder ):  
+    ret ={} 
     OutputPath = BuildFolder + entity + "/"
     
     CSV_readFile=OutputPath+entity+".csv" 
@@ -41,27 +71,19 @@ def vhdl_make_simulation_intern(entity,BuildFolder = constants.default_build_fol
     save_file(CSV_readFile,"")
     save_file(CSV_writeFile,"")
     save_file(OutputPath+"clock_speed.txt","10")
-    query_folder = OutputPath+ constants.text_IO_polling + "/"
+
+    query_interface_ret = make_simulation_query_interface(entity, BuildFolder = BuildFolder)
     
-    try_make_dir(query_folder)
+
+
+
+    ret["CSV_readFile"] = CSV_readFile
+    ret["CSV_writeFile"] = CSV_writeFile
+    ret["OutputPath"] = OutputPath
+    ret["query_folder"] = query_interface_ret["query_folder"]
+    ret["query_pkl"] = query_interface_ret["query_pkl"]
     
-
-
-    save_file(query_folder + constants.text_io_polling_send_lock_txt ,"0")
-    save_file(query_folder + constants.text_io_polling_receive_lock_txt ,
-"""Time, N
-0,     0
-""")
-    save_file(query_folder + constants.text_io_polling_send_txt,    "")
-    save_file(query_folder + constants.text_io_polling_receive_txt ,"")    
-
-   
-    save_file(query_folder +  entity + "_text_io_query_pkg.vhd",
-               make_query_pkg( 
-                   packagename=entity+"_text_io_query_pkg",
-                   path= os.path.abspath( query_folder ).replace("\\","/")   
-               )
-    )
+    return ret
 
 
 
@@ -78,8 +100,10 @@ def extract_header_from_top_file(Entity, FileName,BuildFolder):
     else:
         Content=""
 
-    save_file(BuildFolder+Entity+ "/"+ Entity +"_header.txt", Content)
+    header_file = BuildFolder+Entity+ "/"+ Entity +"_header.txt"
+    save_file(header_file, Content)
     vprint(1)("=======Done Extracting Header From File====")
+    return header_file
 
 
 cocotb_make = """
@@ -112,14 +136,16 @@ export PYDEVD_DISABLE_FILE_VALIDATION=1
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
 """
-def vhdl_make_simulation(Entity, cocotb=None, BuildFolder = constants.default_build_folder):
+def make_simulation(Entity, cocotb=None, BuildFolder = constants.default_build_folder):
+    
+    coco_tb_file = None
     if cocotb is not None:
         cocotb_dir = os.path.abspath(os.path.dirname(cocotb))
         cocotb_basename = os.path.splitext(os.path.basename(cocotb))[0]
         vprint(1)("Cocotb directory:", cocotb_dir)
         vprint(1)("Cocotb basename:", cocotb_basename)
-
-        save_file(BuildFolder+Entity+ "/Makefile", cocotb_make.format(
+        coco_tb_file = BuildFolder+Entity+ "/Makefile"
+        save_file(coco_tb_file, cocotb_make.format(
             cocotb_dir= cocotb_dir,
             cocotb_basename= cocotb_basename,
             Entity= Entity
@@ -127,18 +153,22 @@ def vhdl_make_simulation(Entity, cocotb=None, BuildFolder = constants.default_bu
 
 
 
+    ret = vhdl_make_simulation_intern(Entity,BuildFolder)
+    ret["coco_tb_file"] = coco_tb_file
 
-    fileList = get_dependency_db().get_dependencies_and_make_project_file(Entity)
+    fileList = get_dependency_db().get_dependencies_and_make_project_file(Entity, OutDict = ret)
+    
     if len(fileList)==0:
         vprint(1)("unable to find entity: ", Entity)
-        return 
+        return ret
     
     
 
-    extract_header_from_top_file(Entity, fileList[0],BuildFolder)
+    header_file = extract_header_from_top_file(Entity, fileList[0],BuildFolder)
+    ret["header_file"] = header_file
 
 
-    vhdl_make_simulation_intern(Entity,BuildFolder)
+    return ret
 
 
 def vhdl_make_simulation_wrap(x):
@@ -147,7 +177,7 @@ def vhdl_make_simulation_wrap(x):
     parser.add_argument('--cocotb', type=str, help='Path to Python cocotb file for this entity')
     args = extract_cl_arguments(parser= parser,x=x)
     vprint(0)('Make-Simulation for Entity: ' , args.entity)
-    vhdl_make_simulation(args.entity, args.cocotb)
+    make_simulation(args.entity, args.cocotb)
     vprint(0)('Done Make-Simulation')
     
     

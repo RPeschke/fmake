@@ -1,5 +1,5 @@
 from fmake.generic_helper import try_make_dir, save_file, try_load_file,load_file, cl_add_entity
-from  fmake.vhdl_make_simulation import vhdl_make_simulation
+from  fmake.vhdl_make_simulation import make_simulation
 from fmake.vhdl_get_list_of_files import getListOfFiles
 from fmake.vhdl_programm_list import  add_program
 from fmake.generic_helper import  vprint, extract_cl_arguments, constants
@@ -112,7 +112,7 @@ def vhdl_make_implementation(Entity, UCF_file):
     get_template(simpleTemplate_path)
     
     
-    vhdl_make_simulation(Entity, build_path)
+    make_simulation(Entity, build_path)
 
 
 

@@ -11,6 +11,8 @@ import fmake.make_build_system
 import fmake.run_ise 
 import fmake.run_ghdl
 
+from fmake.pyVivadoProject import pyVivadoProject, assert_file_exists , get_current_path 
+
 
 import fmake.extract_files 
 
@@ -23,11 +25,14 @@ import fmake.make_timestamps
 
 from fmake.text_io_query import text_io_query
 
-from fmake.generic_helper import get_project_directory
+from fmake.generic_helper import get_project_directory , save_file, load_file
 
 from fmake.user_program_runner import program, config, get_program , user_programs_refresh
 
 from fmake.mdPyEx import markdown_monitor, md_config
+
+from fmake.vhdl_make_simulation import make_simulation, make_simulation_query_interface
+
 
 import fmake.make_powershell_bindings 
 import fmake.make_bash_bindings

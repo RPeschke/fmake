@@ -32,9 +32,10 @@ def find_fmake_program_functions(file_path):
     Returns a list of function names.
     """
     pattern = re.compile(
-        r"(?:#?@fmake\.program)\s*\n\s*(?:async\s+)?def\s+(\w+)\s*\("
+        r"#?@fmake\.program(?:\(\s*version\s*=\s*([^)]*)\))?"
+        r"\s*\n\s*(?:async\s+)?def\s+(\w+)\s*\(",
+        re.MULTILINE,
     )
-
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             contents = f.read()
@@ -46,7 +47,7 @@ def find_fmake_program_functions(file_path):
 
 
 def find_fmake_target_functions(file_path):
-    pattern = re.compile(r"@fmake\.target\s*\n\s*def\s+(\w+)\s*\(")
+    pattern = re.compile(r"@fmake\.target(?:\([^)]*\))?\s*\n\s*def\s+(\w+)\s*\(")
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             contents = f.read()
@@ -251,14 +252,16 @@ class user_program_finder_t:
         self.running = True
 
         self.programs = []
-        self.program_thread = threading.Thread(target=self.get_fmake_user_programs, daemon=True)
-        self.program_thread.start()
+        self.program_threads = [threading.Thread(target=self.get_fmake_user_programs, daemon=True)]
+        self.program_threads[0].start()
         atexit.register(self._on_exit)
 
     def _on_exit(self):
         self.running = False
-        self.program_thread.join()
+        for t in self.program_threads:
+            t.join()
 
+        
     def find_program_rows(self, program_name):
         b =  [row for row in self.programs_buffered if len(row) >= 3 and row[2] == program_name]
         if len(b) > 0:
@@ -267,16 +270,17 @@ class user_program_finder_t:
         return [row for row in self.programs if len(row) >= 3 and row[2] == program_name]
 
     def find_program_and_file_rows(self, program_name, file_name):
-        b =  [row for row in self.programs_buffered if len(row) >= 3 and row[2] == program_name and row[0] == file_name]
+        b =  [row for row in self.programs_buffered if len(row) >= 3 and row[2] == program_name and Path(row[0]).name == file_name]
         if len(b) > 0:
             return b
         self.wait_for_programs()
-        return [row for row in self.programs if len(row) >= 3 and row[2] == program_name and row[0] == file_name]
+        return [row for row in self.programs if len(row) >= 3 and row[2] == program_name and Path(row[0]).name == file_name]
 
 
     def wait_for_programs(self):
         """Wait for the background thread to complete loading programs"""
-        self.program_thread.join()
+        for t in self.program_threads:
+            t.join()
         return self.programs
 
     def get_fmake_user_programs(self):
@@ -289,7 +293,11 @@ class user_program_finder_t:
             programs  = find_fmake_program_functions(f[0])
             for p in programs:
                 self.programs.append(
-                    [f[0], f[1] , p ]
+                    [
+                        f[0], 
+                        float(p[0]) if p[0] else 0 , 
+                        p[1] 
+                     ]
                 )
         if not self.running:
             return None 
@@ -321,20 +329,22 @@ class user_program_finder_t:
 user_program_finder_t_instance = user_program_finder_t()
 
 def user_programs_refresh():
-    if user_program_finder_t_instance.program_thread.is_alive():
-        user_program_finder_t_instance.wait_for_programs()
-        return
+    for t in user_program_finder_t_instance.program_threads:
+        if t.is_alive():
+            
+            user_program_finder_t_instance.wait_for_programs()
+            return
     
     user_program_finder_t_instance.running = True
     user_program_finder_t_instance.get_fmake_user_programs()
     user_program_finder_t_instance.running = False
 
 
-def get_fmake_user_programs():
+def get_fmake_user_programs1():
     user_program_finder_t_instance.wait_for_programs()
     return user_program_finder_t_instance.programs
 
-def get_program(Name, fullpath = None,file = None, unique = False):
+def get_program(Name, fullpath = None,file = None, unique = False, version = None, version_exact = False):
 
     if fullpath is None:
         if file is not None:
@@ -342,6 +352,12 @@ def get_program(Name, fullpath = None,file = None, unique = False):
         else:
             FileList =  user_program_finder_t_instance.find_program_rows(Name)
         
+        if version is not None:
+            if version_exact:
+                FileList = [row for row in FileList if row[1] == version]
+            else:
+                FileList = [row for row in FileList if row[1] >= version]
+
         if unique and len(FileList) > 1:
             raise Exception(
                 f"Program '{Name}' is not unique for this call site: "
@@ -352,7 +368,7 @@ def get_program(Name, fullpath = None,file = None, unique = False):
             FileList = _filter_rows_for_callsite_subfolder(FileList)
 
         if len(FileList) == 0:
-            raise Exception("Program Not Found")
+            raise Exception(f"Program Not Found: {Name}, {fullpath}, {file}, {unique}"  )
 
         if len(FileList) > 1:
             raise Exception(
@@ -402,8 +418,24 @@ def run_fmake_user_program(programName):
 
 
 
-def program(func):
-    return func
+from functools import wraps
+
+def program(_func=None, *, version=None):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            print(f"running {func.__name__}, version={version}")
+            return func(*args, **kwargs)
+
+        wrapper.version = version
+        return wrapper
+
+    if _func is None:
+        return decorator
+
+    return decorator(_func)
+
+
 
 def target(func):
     return func

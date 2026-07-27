@@ -256,20 +256,20 @@ def get_build_directory():
     env_build_folder = os.environ.get(constants.env_FMAKEBUILD)
     if env_build_folder:
         if os.path.isdir(env_build_folder):
-            return env_build_folder
+            return str(env_build_folder).replace("\\", "/")
         raise Exception(f"{constants.env_FMAKEBUILD} path does not exist", env_build_folder)
 
     prefix = ""
     fmake_file = constants.default_build_folder+"/"+constants.fmake_filename
     for i in range(100):
         if os.path.isfile(prefix+fmake_file):
-            return os.path.abspath(prefix+ constants.default_build_folder + "/")
+            return str(os.path.abspath(prefix+ constants.default_build_folder + "/")).replace("\\", "/")
         prefix+="../"
     
     fmake_file = constants.alternative_build_folder+"/"+constants.fmake_filename
     for i in range(100):
         if os.path.isfile(prefix+fmake_file):
-            return os.path.abspath(prefix+ constants.alternative_build_folder + "/")
+            return str(os.path.abspath(prefix+ constants.alternative_build_folder + "/")).replace("\\", "/")
         prefix+="../"
 
     raise Exception("unable to find build directory")
@@ -314,24 +314,24 @@ def get_project_directory():
     env_project_folder = os.environ.get(constants.env_PROJECTDIRECTORY)
     if env_project_folder:
         if os.path.isdir(env_project_folder):
-            return env_project_folder
+            return str(env_project_folder).replace("\\", "/")
         raise Exception(f"{constants.env_PROJECTDIRECTORY} path does not exist", env_project_folder)
 
     if g_vars["project_directory"] is not None:
         #check if this is a valid directory
         if os.path.isdir(g_vars["project_directory"]):
-            return g_vars["project_directory"]
+            return str(g_vars["project_directory"]).replace("\\", "/")
         else:
             raise Exception("project directory is not a valid directory", g_vars["project_directory"])
     try:
         build = get_build_directory()
-        return os.path.abspath(build + "/../" )
+        return str(os.path.abspath(build + "/../" )).replace("\\", "/")
     except:
         pass
 
     git_root = find_git_root()    
     if git_root:
-        return git_root
+        return str(git_root).replace("\\", "/")
 
-    return os.path.abspath(".")
+    return str(os.path.abspath(".")).replace("\\", "/")
     

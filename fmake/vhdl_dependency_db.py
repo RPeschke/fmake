@@ -102,13 +102,16 @@ class dependency_db_cl:
         return self.filelist
 
             
-    def get_dependencies_and_make_project_file(self,Entity):
+    def get_dependencies_and_make_project_file(self,Entity, OutDict = {}):
         if not  self.IsInitilized:
             raise Exception("dependency_db_cl not initilized")
         fileList = self.get_dependencies(Entity)
+        OutDict["fileList"] = fileList
         
         OutputFile =  "build/" +Entity+"/"+Entity+".prj"
+        OutDict["OutputFile"] = OutputFile
         outPath = "build/" +Entity
+        OutDict["outPath"] = outPath
         
         try_make_dir(outPath)
          
@@ -120,6 +123,7 @@ class dependency_db_cl:
 
 
         OutputFileMK =  "build/" +Entity+"/"+Entity+".mk"
+        OutDict["OutputFileMK"] = OutputFileMK
         
         linesmk = "THIS_MK_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))\n"
         linesmk += "VHDL_SOURCES =  \\\n"
