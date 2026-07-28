@@ -223,18 +223,8 @@ def vhdl_parse_folder( Folder = ".", verbose = False):
         "records": [],
         "constants": []
     }
-      
-    vprint(1)( '<vhdl_parse_folder FolderName="'+ Folder +'">')
-   
-    vprint(1) ( '  <getListOfFiles> ')
-    
     flist = getListOfFiles(Folder,"*.vhd")
-    
-    vprint(1)( '  </getListOfFiles> ')
-
     for f in flist:
-
-         
         vprint(1)("process file: ",f)
         
         try:
