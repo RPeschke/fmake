@@ -34,8 +34,8 @@ from fmake.mdPyEx import markdown_monitor, md_config
 from fmake.vhdl_make_simulation import make_simulation, make_simulation_query_interface
 
 
-import fmake.make_powershell_bindings 
-import fmake.make_bash_bindings
+import fmake.comandline_bindings.make_powershell_bindings 
+import fmake.comandline_bindings.make_bash_bindings
 
 from fmake.attach_debugger import attach_debugger
 

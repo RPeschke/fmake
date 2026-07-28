@@ -91,11 +91,10 @@ def try_make_dir(name,isRelativePath=True):
         else:
             abs_name = name
 
-        os.mkdir(abs_name)
+        os.makedirs(abs_name, exist_ok=True)
     except OSError:  
         vprint(1) ("Creation of the directory %s failed" % name)
-    else:  
-        vprint(1) ("Successfully created the directory %s " % name)
+
 
 
 

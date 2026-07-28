@@ -141,7 +141,12 @@ class vhdl_entity:
             entityDef,r = vhdl_get_entity_def(entityDef)
         self.entityDef = entityDef[0]
         self.df_entity = r[r["entity_name"] == r["entity_name"].iloc[0]]
-        df = pd.DataFrame( [[x[0],x[1],x[2],x[3]] for x in  self.df_entity.port_type.apply(extract_baseType)] ,columns = ["basetype", "direction", "first", "second"] )
+        df = pd.DataFrame([
+                [x[0],x[1],x[2],x[3]] 
+                for x in  self.df_entity.port_type.apply(extract_baseType)
+            ], 
+            columns = ["basetype", "direction", "first", "second"] 
+        )
         self.df_entity['basetype'] = df["basetype"]
         self.df_entity['direction'] = df["direction"]
         self.df_entity['first'] = df["first"]

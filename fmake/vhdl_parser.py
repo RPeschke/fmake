@@ -52,12 +52,16 @@ def vhdl_parser_types_array(FileName, x, ret1):
 
     basetype = x["BaseType"]+"  (  " + x["array_length"] +"  )  "
     if len(sub_direction) > 0:
-        ret1["records"].extend(  [ [ FileName , "temp", x["name"]+"$temp" ,x["BaseType"] ,"" ,sub_basetype,sub_direction,sub_first,sub_second  ]  ]  )     
+        ret1["records"].extend([
+            [FileName , "temp", x["name"]+"$temp" ,x["BaseType"] ,"" ,sub_basetype,sub_direction,sub_first,sub_second  ]  
+        ])     
         basetype = x["name"]+"$temp" +"  (  " + x["array_length"] +"  )  "
         
     
     main_basetype,main_direction,main_first,main_second =  extract_baseType(basetype)
-    ret1["records"].extend(  [ [ FileName ,  x["vhdl_type"], x["name"],basetype,"" ,main_basetype,main_direction,main_first,main_second  ]  ]  )     
+    ret1["records"].extend([
+        [ FileName ,  x["vhdl_type"], x["name"],basetype,"" ,main_basetype,main_direction,main_first,main_second  ]  
+    ])     
 
 def vhdl_parser_types(FileName, ret1):
     FileContent=load_file_witout_comments(FileName)
@@ -66,17 +70,26 @@ def vhdl_parser_types(FileName, ret1):
         if x["vhdl_type"] == "record":
             for y in x["record"]:
                 basetype,direction,first,second =  extract_baseType(y["type"])
-                ret1["records"].extend(  [ [ FileName ,  x["vhdl_type"], x["name"],y["type"] ,y["name"], basetype,direction,first,second ]  ]  )
+                ret1["records"].extend([
+                    [FileName ,  x["vhdl_type"], x["name"],y["type"] ,y["name"], basetype,direction,first,second]  
+                ])
+
         elif x["vhdl_type"] == "enum":
             for y in x["record"]:
                 basetype,direction,first,second =  extract_baseType(y["type"])
-                ret1["records"].extend(  [ [ FileName ,  x["vhdl_type"], x["name"],y["type"] ,y["name"],basetype,direction,first,second ]  ]  )                
+                ret1["records"].extend([
+                    [FileName ,  x["vhdl_type"], x["name"],y["type"] ,y["name"],basetype,direction,first,second ]  
+                ])   
+
         elif x["vhdl_type"] == "array":
             vhdl_parser_types_array(FileName, x, ret1)
 
         elif x["vhdl_type"] == "subtype":
             basetype,direction,first,second =  extract_baseType(x["BaseType"])
-            ret1["records"].extend(  [ [ FileName ,  x["vhdl_type"], x["name"],x["BaseType"],"",basetype,direction,first,second ]  ]  )                 
+            ret1["records"].extend([
+                [FileName ,  x["vhdl_type"], x["name"],x["BaseType"],"",basetype,direction,first,second]
+            ])                 
+
         elif x["vhdl_type"] == "not_used":
             pass
         else:
@@ -123,22 +136,26 @@ def vhdl_parser(FileName, ret1={}):
     
     entityDef=findDefinitionsInFile(FileContent,"entity","is")
     
-    ret1["symbols"].extend(  [ [ FileName , "entityDef", x,Modified ]   for x in entityDef ] )
+    ret1["symbols"].extend([
+        [ FileName , "entityDef", x,Modified ]   
+        for x in entityDef 
+    ])
     
     Type_Def=findDefinitionsInFile(FileContent,"type","is")
     subType_Def=findDefinitionsInFile(FileContent,"subtype","is")
     
     
-    ret1["symbols"].extend(  [ [ FileName , "Type_Def", x,Modified ]   for x in Type_Def + subType_Def ] )
+    ret1["symbols"].extend([
+        [FileName , "Type_Def", x,Modified]   
+        for x in Type_Def + subType_Def 
+    ])
 
 
     type_def_detail = vhdl_get_type_def_from_string(FileContent)
     
     vhdl_parser_types(FileName, ret1)
     vhdl_parser_constants(FileName, ret1)
-    #for x in type_def_detail:
-    #    for y in x["record"]:
-    #        ret1["records"].extend(  [ [ FileName ,  x["vhdl_type"], x["name"],y["type"] ,y["name"], Modified ]  ]  )
+    
             
     ret1["symbols"].extend(  [ 
         [ FileName , "Type_Def_detail", x["name"],Modified ]   
@@ -166,13 +183,19 @@ def vhdl_parser(FileName, ret1={}):
     entityUSE=findDefinitionsInFile(FileContent,"entity","port")
     entityUSE2=findDefinitionsInFile(FileContent,"entity","(")
     
-    ret1["symbols"].extend(  [ [ FileName , "entityUSE", x,Modified ]   for x in entityUSE + entityUSE_G +entityUSE2  ] )
+    ret1["symbols"].extend([
+        [ FileName , "entityUSE", x,Modified ]   
+        for x in entityUSE + entityUSE_G +entityUSE2  
+    ])
     
     ComponentUSE=findDefinitionsInFile(FileContent,"component","is")
     ComponentUSE_G=findDefinitionsInFile(FileContent,"component","generic")
     ComponentUSE_P=findDefinitionsInFile(FileContent,"component","port")
     
-    ret1["symbols"].extend(  [ [ FileName , "ComponentUSE", x ,Modified]   for x in ComponentUSE +ComponentUSE_G +ComponentUSE_P  ] )
+    ret1["symbols"].extend([
+        [ FileName , "ComponentUSE", x ,Modified]   
+        for x in ComponentUSE +ComponentUSE_G +ComponentUSE_P  
+    ])
     
     
 

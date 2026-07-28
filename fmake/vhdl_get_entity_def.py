@@ -72,11 +72,34 @@ def entity_def_to_dataframe(entity_list):
     ret = []
     for x in entity_list:
         for y in x["generic"]:
-            ret.append([x["name"].strip(),"generic", y['name'].strip() , y['type'].strip()   , y['InOut'].strip()   , y['default'].strip()  ] )
+            ret.append([
+                x["name"].strip(),
+                "generic", 
+                y['name'].strip(), 
+                y['type'].strip(),
+                y['InOut'].strip(),
+                y['default'].strip()  
+            ])
         for y in x["port"]:
-            ret.append([x["name"].strip(),"port", y['name'].strip() , y['type'].strip()   , y['InOut'].strip()   , y['default'].strip()       ] )   
+            ret.append([
+                x["name"].strip(),
+                "port", 
+                y['name'].strip(), 
+                y['type'].strip(),
+                y['InOut'].strip(),
+                y['default'].strip()       
+            ])   
             
-    ret = pd.DataFrame(ret, columns=["entity_name","generic_or_port","port_name","port_type","InOut","default"])
+    ret = pd.DataFrame(ret, 
+        columns=[
+            "entity_name",
+            "generic_or_port",
+            "port_name",
+            "port_type",
+            "InOut",
+            "default"
+        ]
+    )
              
     return ret
 

@@ -7,7 +7,7 @@ from fmake.vhdl_programm_list import add_program
 import fmake.vhdl_load_file_without_comments as ld
 from fmake.vhdl_dependency_db import  get_dependency_db
 
-from  fmake.generic_helper               import save_file, try_make_dir, cl_add_entity, join_str
+from  fmake.generic_helper               import   cl_add_entity
 from  fmake.vhdl_programm_list           import add_program 
 from  fmake.generic_helper               import  vprint, extract_cl_arguments , constants
 
