@@ -1,6 +1,6 @@
 from fmake.vhdl_programm_list import add_program
 
-from fmake.vhdl_programm_list import get_function,  print_list_of_programs
+from fmake.vhdl_programm_list import print_list_of_programs
 
 def get_help_wrap(x):
     print("Fmake is a build system for VHDL projects.")
