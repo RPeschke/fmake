@@ -27,7 +27,7 @@ from fmake.text_io_query import text_io_query
 
 from fmake.generic_helper import get_project_directory , save_file, load_file
 
-from fmake.user_program_runner import program, config, get_program , user_programs_refresh, add_external_root
+from fmake.user_program_runner import program, target, config, get_program , user_programs_refresh, add_external_root, get_list_of_user_programs
 
 from fmake.mdPyEx import markdown_monitor, md_config
 

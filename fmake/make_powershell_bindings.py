@@ -3,7 +3,7 @@ import fmake.export_registers_from_csv
 from fmake.vhdl_programm_list import add_program,get_list_of_programms, get_function
 from fmake.mdPyEx import Scope, update_file
 
-from fmake.user_program_runner import run_fmake_user_program,parse_args_to_kwargs
+from fmake.user_program_runner import parse_args_to_kwargs ,get_list_of_user_programs, get_program
 
 from fmake.main_vhdl_make import main_vhdl_make
 import inspect
@@ -90,14 +90,14 @@ def make_powershell_bindings(x):
         help='Export builtin functions to the generated PowerShell bindings.'
     )
     args = parser.parse_args(x[2:])  # skip program namepython
-    fun, user_programs = run_fmake_user_program("")
+    user_programs = get_list_of_user_programs(keyword="program")
     projectdir = get_project_directory()
     ret = ""
 
     if not args.export_builtin_functions:
         for f,_,p in user_programs:
             
-            fun, user_programs = run_fmake_user_program(p)
+            fun  = get_program(p, keyword="program")
             ret += "\n\n" + ps1_script_for_function_from_function(p, fun,  projectdir, Function_prefix=args.prefix)
 
     else:

@@ -2,11 +2,12 @@ import sys
 from fmake.vhdl_programm_list import get_function,  print_list_of_programs
 from fmake import get_project_directory
 from pathlib import Path
-from fmake.user_program_runner import run_fmake_user_program, parse_args_to_kwargs, print_user_program_table
+from fmake.user_program_runner import  parse_args_to_kwargs, print_user_program_table , get_list_of_user_programs, get_program
 from fmake.generic_helper import set_project_directory
 import inspect
+import fmake
 
-
+import traceback
 
 def handle_path_argument():
     if len(sys.argv) > 1 and sys.argv[1] == "--path":
@@ -27,7 +28,7 @@ def handle_not_enough_arguments():
         print("not enough arguments")
         print("\n\nFmake Programs:")
         print_list_of_programs(printer= print)
-        _, user_programs = run_fmake_user_program("")
+        user_programs = get_list_of_user_programs(keyword="program")
         print("\n\nUser programs:")
         print_user_program_table(user_programs)
         return True
@@ -47,9 +48,12 @@ def handle_builtin_programs():
 
 def handle_user_programs():
     program = sys.argv[1]
-    
+    fun = None
+    try:
+        fun = get_program(program, keyword="program")
+    except:
+        pass 
 
-    fun, user_programs = run_fmake_user_program(program)
     if fun is not None:
         args, kwargs = parse_args_to_kwargs(sys.argv[2:])
         try:
@@ -71,7 +75,28 @@ def handle_user_programs():
                     
             
             return True
-        
+        except Exception as e:
+            print(e)
+            print("Call stack (project files only):")
+            
+            fmake_root = Path(fmake.__file__).resolve().parent
+            tb_frames = traceback.extract_tb(e.__traceback__)
+            filtered_frames = [
+                frame
+                for frame in tb_frames
+                if not Path(frame.filename).resolve().is_relative_to(fmake_root)
+            ]
+            if filtered_frames:
+                print("Traceback (most recent call last):")
+                for frame in filtered_frames:
+                    print(
+                        f'  File "{frame.filename}", line {frame.lineno}, in {frame.name}'
+                    )
+                    if frame.line:
+                        print(f"    {frame.line.strip()}")
+            else:
+                print("  No project-local frames found.")
+            return True
     return False
 
 def handle_unknown_program():
@@ -80,7 +105,7 @@ def handle_unknown_program():
     print("\n\nFmake Programs:")
     print_list_of_programs(printer= print)
     print("\n\nUser programs:")
-    fun, user_programs = run_fmake_user_program("")
+    user_programs = get_list_of_user_programs()
     print_user_program_table(user_programs)
 
     
@@ -107,7 +132,6 @@ def main_vhdl_make():
     
     
     handle_unknown_program()
-    
     
     
     

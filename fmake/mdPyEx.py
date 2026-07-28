@@ -3,7 +3,7 @@ from xml.etree.ElementTree import fromstring, ParseError
 import random
 
 from fmake.vhdl_programm_list import add_program
-from fmake.user_program_runner import parse_args_to_kwargs, get_fmake_user_programs1, get_program
+from fmake.user_program_runner import parse_args_to_kwargs, get_list_of_user_programs, get_program
 
 md_config = {
     "onExit" : []
@@ -95,7 +95,7 @@ class Scope:
 
         user = UserNamespace()
 
-        userPrograms = get_fmake_user_programs1()
+        userPrograms = get_list_of_user_programs()
         for p in userPrograms:
             func = run_fmake_user_program_CL(Name= p[2], Filename = p[0]) 
             name = p[2]

@@ -1,39 +1,56 @@
 import atexit
 import os
-import glob
-from datetime import datetime
+
+
 import re
 import threading
 
 import importlib.util
 import sys
-import base64
+
 import inspect
 import os
 
 
-import hashlib
-from tokenize import Name
+
+
 import fmake
 
 import importlib.util
 import os
 import sys
 from pathlib import Path
-from functools import lru_cache
+
 import dataframe_helpers as dfh
 
 
 import re
 
-def find_fmake_program_functions(file_path):
+
+class program_parameters:
+    keywords = ["program" , "target"]
+    def __init__(self, Name, fullpath = None,file = None, unique = False, version = None, version_exact = False, keyword = None):
+        self.Name = Name
+        self.fullpath = fullpath
+        self.file = file
+        self.unique = unique
+        self.version = version
+        self.version_exact = version_exact
+        if keyword is not None and keyword not in self.keywords:
+            raise Exception("unknown Keyword\nsupported keywords:", self.keywords )
+        self.keyword = keyword 
+
+
+
+def find_fmake_program_functions(file_path, keyword="program"):
     """
-    Finds functions decorated with @fmake.program or #@fmake.program,
+    Finds functions decorated with @fmake.<keyword> or #@fmake.<keyword>,
     supporting both sync and async functions.
     Returns a list of function names.
     """
+    keyword_escaped = re.escape(keyword)
     pattern = re.compile(
-        r"#?@fmake\.program(?:\(\s*version\s*=\s*([^)]*)\))?"
+        rf"#?@fmake\.{keyword_escaped}(?:\(\s*version\s*=\s*([^)]*)\))?"
         r"\s*\n\s*(?:async\s+)?def\s+(\w+)\s*\(",
         re.MULTILINE,
     )
@@ -47,14 +64,6 @@ def find_fmake_program_functions(file_path):
 
 
 
-def find_fmake_target_functions(file_path):
-    pattern = re.compile(r"@fmake\.target(?:\([^)]*\))?\s*\n\s*def\s+(\w+)\s*\(")
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            contents = f.read()
-    except UnicodeDecodeError:
-        return []
-    return pattern.findall(contents)
 
 
 
@@ -165,16 +174,16 @@ def parse_args_to_kwargs(arglist):
 
 
 def print_user_program_table(user_programs, printer=print):
-    rows = [row for row in user_programs if len(row) >= 3]
-    rows.sort(key=lambda row: (row[2].lower(), row[0].lower()))
+    rows = user_programs
+    rows.sort(key=lambda row: (row["program_name"].lower(), row["filename"].lower()))
 
-    program_width = max(len("Program"), *(len(row[2]) for row in rows)) if rows else len("Program")
+    program_width = max(len("Program"), *(len(row["filename"]) for row in rows)) if rows else len("Program")
 
     printer(f"{'Program'.ljust(program_width)}  File")
     printer(f"{'-' * program_width}  {'-' * 4}")
 
-    for file_path, _, program_name in rows:
-        printer(f"{program_name.ljust(program_width)}  {file_path}")
+    for r in rows:
+        printer(f"{r["program_name"].ljust(program_width)}  {r["filename"]}")
 
 
 
@@ -208,20 +217,22 @@ class user_program_finder_t:
         self.program_threads[-1].start()
 
 
-    def get_programs(self, root=None):
+    def get_programs(self, root=None, keyword = None):
         root = root if root is not None else fmake.get_project_directory()
         with self._buffer_lock:
-            return self.user_programs_buffer.get(root, [])
+            ret =   self.user_programs_buffer.get(root, [])
+            ret = [r for r in ret if keyword is None or r.get("type", "program") == keyword]
+            return ret
     
         
-    def find_program_and_file_rows_internal(self, program_name, file_name = None):
+    def find_program_and_file_rows_internal(self, param :program_parameters ):
         fltr = lambda row: (
-            row["program_name"] == program_name
-            and (file_name is None or Path(row["filename"]).name  == file_name)
+            row["program_name"] == param.Name
+            and (param.file is None or Path(row["filename"]).name  == param.file)
         )
         
         b =  [
-            row for row in self.get_programs() 
+            row for row in self.get_programs(keyword = param.keyword) 
               if fltr(row) 
             ]
         if len(b) > 0:
@@ -229,7 +240,7 @@ class user_program_finder_t:
 
         for root in self.external_roots:
             b =  [
-                row for row in self.get_programs(root) 
+                row for row in self.get_programs(root, keyword = param.keyword)
                 if fltr(row) 
             ]
             if len(b) > 0:
@@ -237,14 +248,14 @@ class user_program_finder_t:
         return []
 
     
-    def find_program_rows(self, program_name,  file_name = None):
-        b = self.find_program_and_file_rows_internal(program_name, file_name)
+    def find_program_rows(self,param :program_parameters ):
+        b = self.find_program_and_file_rows_internal(param)
         if len(b) > 0:
             return b    
 
         self.wait_for_programs()
 
-        return  self.find_program_and_file_rows_internal(program_name, file_name)
+        return  self.find_program_and_file_rows_internal(param)
         
 
 
@@ -262,15 +273,19 @@ class user_program_finder_t:
         for f in files:
             if not self.running:
                 return 
-            programs_regex  = find_fmake_program_functions(f[0])
-            for p in programs_regex:
-                programs.append(
-                    {
-                        "filename" : f[0], 
-                        "version" : float(p[0]) if p[0] else 0 , 
-                        "program_name" : p[1] 
-                    }
-                )
+            for keyword in program_parameters.keywords:
+                programs_regex  = find_fmake_program_functions(f[0], keyword=keyword)
+                for p in programs_regex:
+                    programs.append(
+                        {
+                            "filename" : f[0], 
+                            "version" : float(p[0]) if p[0] else 0.0 , 
+                            "program_name" : p[1],
+                            "type" :keyword
+                        }
+                    )
+            
+                            
         if not self.running:
             return  
         with self._buffer_lock:
@@ -315,30 +330,36 @@ def user_programs_refresh():
     user_program_finder_t_instance.running = False
 
 
-def get_fmake_user_programs1():
+def get_list_of_user_programs(keyword = None):
     user_program_finder_t_instance.wait_for_programs()
-    return user_program_finder_t_instance.get_programs()
+    ret = []
+    ret.extend(user_program_finder_t_instance.get_programs(keyword=keyword))
+    for root in user_program_finder_t_instance.external_roots:
+        ret.extend( user_program_finder_t_instance.get_programs(root, keyword=keyword) )
+    return ret
 
 
 def add_external_root(root):
     user_program_finder_t_instance.add_external(root)
 
-def get_program(Name, fullpath = None,file = None, unique = False, version = None, version_exact = False):
 
-    def filter_version(programs, version=None, version_exact=False):
-        if version is not None:
-            if version_exact:
-                programs = [row for row in programs if row["version"] == version]
+
+def get_program_internal(param: program_parameters):
+
+    def filter_version(programs):
+        if param.version is not None:
+            if param.version_exact:
+                programs = [row for row in programs if row["version"] == param.version]
             else:
-                programs = [row for row in programs if row["version"] >= version]
+                programs = [row for row in programs if row["version"] >= param.version]
 
         return programs
 
-    def filter_unique(programs, unique=False):
-        if unique and len(programs) > 1:
+    def filter_unique(programs):
+        if param.unique and len(programs) > 1:
             raise Exception(
                 f"Program '{programs[0][2]}' is not unique for this call site: "
-                f"{[row[0] for row in programs]}"
+                f"{[row["filename"] for row in programs]}"
             )
         return programs
 
@@ -349,72 +370,68 @@ def get_program(Name, fullpath = None,file = None, unique = False, version = Non
         filtered = _filter_rows_for_callsite_subfolder(programs)
         return filtered
 
-    def assert_one_candidate_found(FileList, Name , fullpath , file , unique ):
+    def assert_one_candidate_found(FileList):
         
         if len(FileList) == 0:
-            raise Exception(f"Program Not Found: {Name}, {fullpath}, {file}, {unique}"  )
+            raise Exception(f"Program Not Found: {param.Name}, {param.fullpath}, {param.file}, {param.unique}"  )
 
         if len(FileList) > 1:
             raise Exception(
-                    f"Program '{Name}' is ambiguous for this call site: "
-                    f"{[row[0] for row in FileList]}"
+                    f"Program '{param.Name}' is ambiguous for this call site: "
+                    f"{[row["filename"] for row in FileList]}"
                 )
 
-    def assert_function_found(module, Name):
-        if not hasattr(module, Name):
+    def assert_function_found(module):
+        if not hasattr(module, param.Name):
             raise Exception("Program Not Found")
     
-    if fullpath is None:
-        FileList =  user_program_finder_t_instance.find_program_rows(Name, file)
+    if param.fullpath is None:
+        FileList =  user_program_finder_t_instance.find_program_rows(param)
 
-        FileList = filter_version(FileList, version=version, version_exact=version_exact)
+        FileList = filter_version(FileList)
 
-        FileList = filter_unique(FileList, unique=unique)
+        FileList = filter_unique(FileList)
 
         FileList = filter_caller_subfolder(FileList)
 
         
-        assert_one_candidate_found(FileList, Name , fullpath , file , unique  )
+        assert_one_candidate_found(FileList)
       
         fullpath = FileList[0]["filename"]
     
     
     module = load_and_run_module(fullpath  )
 
-    assert_function_found(module, Name )
+    assert_function_found(module )
 
-    return getattr(module, Name)
+    return getattr(module, param.Name)
 
+def get_program(Name, fullpath = None,file = None, unique = False, version = None, version_exact = False, keyword = None):
 
-def run_fmake_user_program(programName):
+    if "." in Name:
+        sp = Name.split(".")
+        file= sp[0]+".py"
+        Name= sp[1]
+    if ">=" in Name:
+        sp = Name.split(">=")
+        Name = sp[0]
+        version = float(sp[1])
+        version_exact = False
+    elif "==" in Name:
+        sp = Name.split("==")
+        Name = sp[0]
+        version = float(sp[1])
+        version_exact = True
+    elif "=" in Name:
+        sp = Name.split("=")
+        Name = sp[0]
+        version = float(sp[1])
+        version_exact = True
 
-
-    
-    
-        
-    FileList =  user_program_finder_t_instance.find_program_rows(programName)
-
-    if len(FileList) == 0:
-        user_program_finder_t_instance.wait_for_programs()
-        user_programs =  user_program_finder_t_instance.get_programs()
-        return None, user_programs
-
-    filepath = FileList[0][0]
-    functionName = FileList[0][2]
-    module = load_and_run_module(filepath  )
-
-
-    if not hasattr(module, functionName):
-        user_program_finder_t_instance.wait_for_programs()
-        user_programs =  user_program_finder_t_instance.get_programs()
-        return None, user_programs
-    
-
-    config.Execution_Path = os.getcwd()
-    fun = getattr(module, functionName) # (*args, **kwargs)  # Call the function
-    return fun, None
-
-
+    param = program_parameters(
+        Name = Name, fullpath = fullpath,file = file, unique = unique, version = version, version_exact = version_exact, keyword = keyword
+    )
+    return get_program_internal(param)
 
 from functools import wraps
 
@@ -422,7 +439,7 @@ def program(_func=None, *, version=None):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            print(f"running {func.__name__}, version={version}")
+            #print(f"running {func.__name__}, version={version}")
             return func(*args, **kwargs)
 
         wrapper.version = version
@@ -435,8 +452,21 @@ def program(_func=None, *, version=None):
 
 
 
-def target(func):
-    return func
+
+def target(_func=None, *, version=None):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            #print(f"running {func.__name__}, version={version}")
+            return func(*args, **kwargs)
+
+        wrapper.version = version
+        return wrapper
+
+    if _func is None:
+        return decorator
+
+    return decorator(_func)
 
 
 class programs_config_t:
