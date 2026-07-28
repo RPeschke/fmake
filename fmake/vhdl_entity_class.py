@@ -25,6 +25,8 @@ def isPrimitiveType(typeName):
         return True
     elif  " signed " in  " " +typeName:
         return True
+    elif  " unsigned " in  " " +typeName:
+        return True
     return False
 
 

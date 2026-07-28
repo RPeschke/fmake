@@ -140,16 +140,25 @@ def vhdl_parser(FileName, ret1={}):
     #    for y in x["record"]:
     #        ret1["records"].extend(  [ [ FileName ,  x["vhdl_type"], x["name"],y["type"] ,y["name"], Modified ]  ]  )
             
-    ret1["symbols"].extend(  [ [ FileName , "Type_Def_detail", x["name"],Modified ]   for x in type_def_detail  ] )
+    ret1["symbols"].extend(  [ 
+        [ FileName , "Type_Def_detail", x["name"],Modified ]   
+        for x in type_def_detail  
+    ])
 
     packageDef=findDefinitionsInFile(FileContent,"package","is")
     
-    ret1["symbols"].extend(  [ [ FileName , "packageDef", x , Modified]   for x in packageDef  ] )
+    ret1["symbols"].extend(  [ 
+        [ FileName , "packageDef", x , Modified]   
+        for x in packageDef  
+    ])
 
     packageUSE=findDefinitionsInFile(FileContent,"work.","all",".")
     
     
-    ret1["symbols"].extend(  [ [ FileName , "packageUSE", x , Modified]   for x in packageUSE  ] )
+    ret1["symbols"].extend([
+        [ FileName , "packageUSE", x , Modified]   
+        for x in packageUSE  
+    ])
 
 
 
@@ -218,11 +227,37 @@ def vhdl_parse_folder( Folder = ".", verbose = False):
 
     
 
-    df = pd.DataFrame(ret1["symbols"], columns = ["filename","type","name", "data"])
+    df = pd.DataFrame(ret1["symbols"], 
+        columns = [
+            "filename",
+            "type",
+            "name",
+            "data"
+        ]
+    )
     df["name"] = df.apply(lambda x: x["name"].replace("work.",""), axis=1)
      
-    df_records = pd.DataFrame(ret1["records"], columns = ["FileName" ,  "vhdl_type", "top_name","sub_type" ,"sub_name" ,"basetype" ,"direction" ,"first" ,"second" ])
-    df_constants = pd.DataFrame(ret1["constants"], columns = ["FileName" ,   "constant_name", "top_name" ,"default" ])
+    df_records = pd.DataFrame(ret1["records"], 
+        columns = [
+            "FileName",
+            "vhdl_type",
+            "top_name",
+            "sub_type",
+            "sub_name",
+            "basetype",
+            "direction",
+            "first",
+            "second" 
+        ]
+    )
+    df_constants = pd.DataFrame(ret1["constants"], 
+        columns = [
+            "FileName",
+            "constant_name",
+            "top_name",
+            "default" 
+        ]
+    )
      
     vprint(1) ( '</vhdl_parse_folder>')
     

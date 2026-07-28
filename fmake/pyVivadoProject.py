@@ -28,11 +28,19 @@ def assert_file_exists(path):
         raise FileNotFoundError(f"\n====================================\nFile not found:\n{p}\n====================================\n")
     return str(p.resolve()).replace("\\", "/")
 
+def to_absolute_internal(path, base):
+    if Path(path).is_absolute():
+        return path
+
+    return f"{base}/{path}"
+
 def to_absolute(paths, base = None, caller_levels_up=1):
+
+
     caller_folder = get_caller_folder(caller_levels_up)
     if base is None:
         base = caller_folder
-    return [assert_file_exists(f"{base}/{path}") for path in paths]
+    return [assert_file_exists(to_absolute_internal( path , base)) for path in paths]
 
 
 def get_current_path():
@@ -89,7 +97,9 @@ class pyVivadoProject:
     def add_block_design(self, script_path, block_name):
         # Implement logic to add a block design to the project
         caller = get_caller_folder(levels_up=2)
-        script_path = assert_file_exists(f"{caller}/{script_path}")
+        script_path = assert_file_exists( 
+            to_absolute_internal(script_path,caller)
+        )
         self.block_designs.append((script_path, block_name))
 
     def make_vivado(self):
