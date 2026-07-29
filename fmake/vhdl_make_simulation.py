@@ -106,55 +106,15 @@ def extract_header_from_top_file(Entity, FileName,BuildFolder):
     return header_file
 
 
-cocotb_make = """
-.SILENT:
-MAKEFLAGS += --no-print-directory
-
-TOPLEVEL_LANG = vhdl
-SIM = ghdl
-TOPLEVEL = {Entity}
-
-
-
-PYTHONPATH = {cocotb_dir}
-export PYTHONPATH
-
-COCOTB_TEST_MODULES = {cocotb_basename}
-
-
-include ./{Entity}.mk
-
-SIM_ARGS += --fst=waves.fst
-GHDL_ARGS = --std=08
-
-
-# noise suppression
-export COCOTB_LOG_LEVEL=ERROR
-export GPI_LOG_LEVEL=ERROR
-export PYDEVD_DISABLE_FILE_VALIDATION=1
-
-include $(shell cocotb-config --makefiles)/Makefile.sim
-
-"""
-def make_simulation(Entity, cocotb=None, BuildFolder = constants.default_build_folder):
+def make_simulation(Entity, BuildFolder = constants.default_build_folder):
     
-    coco_tb_file = None
-    if cocotb is not None:
-        cocotb_dir = os.path.abspath(os.path.dirname(cocotb))
-        cocotb_basename = os.path.splitext(os.path.basename(cocotb))[0]
-        vprint(1)("Cocotb directory:", cocotb_dir)
-        vprint(1)("Cocotb basename:", cocotb_basename)
-        coco_tb_file = BuildFolder+Entity+ "/Makefile"
-        save_file(coco_tb_file, cocotb_make.format(
-            cocotb_dir= cocotb_dir,
-            cocotb_basename= cocotb_basename,
-            Entity= Entity
-        ))
+
+
 
 
 
     ret = vhdl_make_simulation_intern(Entity,BuildFolder)
-    ret["coco_tb_file"] = coco_tb_file
+
 
     fileList = get_dependency_db().get_dependencies_and_make_project_file(Entity, OutDict = ret)
     
@@ -174,10 +134,10 @@ def make_simulation(Entity, cocotb=None, BuildFolder = constants.default_build_f
 def vhdl_make_simulation_wrap(x):
     parser = argparse.ArgumentParser(description='make project files etc. for the simulation')
     cl_add_entity(parser)
-    parser.add_argument('--cocotb', type=str, help='Path to Python cocotb file for this entity')
+
     args = extract_cl_arguments(parser= parser,x=x)
     vprint(0)('Make-Simulation for Entity: ' , args.entity)
-    make_simulation(args.entity, args.cocotb)
+    make_simulation(args.entity)
     vprint(0)('Done Make-Simulation')
     
     

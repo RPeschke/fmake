@@ -25,17 +25,15 @@ class dependency_db_cl:
         self.IsInitilized = True
         self.reparse_files()
         self.df = pd.read_pickle(self.FileName + ".pkl")
-        self.df_records = pd.read_pickle(self.FileName + "_records.pkl")
-        self.df_constants = pd.read_pickle(self.FileName + "_constants.pkl")
+
 
 
     def reparse_files(self):
         if not  self.IsInitilized:
             raise Exception("dependency_db_cl not initilized")
-        df,df_records,df_constants =  vhdl_parse_folder()
+        df =  vhdl_parse_folder()
         df.to_pickle(self.FileName + ".pkl")
-        df_records.to_pickle(self.FileName + "_records.pkl")
-        df_constants.to_pickle(self.FileName + "_constants.pkl")
+
 
 
     def entity2FileName(self, entityName):
@@ -122,14 +120,7 @@ class dependency_db_cl:
         self.filelist  = fileList
 
 
-        OutputFileMK =  "build/" +Entity+"/"+Entity+".mk"
-        OutDict["OutputFileMK"] = OutputFileMK
-        
-        linesmk = "THIS_MK_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))\n"
-        linesmk += "VHDL_SOURCES =  \\\n"
-        for k in fileList:
-            linesmk += '$(THIS_MK_DIR)/../../' + k + '\\\n'
-        save_file(OutputFileMK, linesmk)
+
         
         return fileList
 
