@@ -182,3 +182,5 @@ poetry.toml
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 /tests/*
+fmake/user_program_runner.py.buffer.pkl
+examples/*
