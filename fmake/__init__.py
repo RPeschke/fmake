@@ -1,4 +1,5 @@
 import fmake.simulator_support.run_vivado
+import fmake.simulator_support.run_ghdl
 import fmake.VHDL_tools.make_simulation
 
 

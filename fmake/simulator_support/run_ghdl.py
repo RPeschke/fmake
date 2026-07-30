@@ -41,7 +41,12 @@ def load_vhdl_sources_from_prj(project_file):
 
 
 def run_cocotb(args):
-    test_file = Path(args.cocotb_file)
+    
+    test_file = Path(args.cocotb_file).resolve()
+    if not test_file.is_file():
+        print(f"Error: cocotb file does not exist: {test_file}")
+        raise SystemExit(1)
+
     build_path = fmake.get_project_directory() + "/build/"   + args.entity  
 
     if not os.path.isdir(build_path):
