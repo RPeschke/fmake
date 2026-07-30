@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fmake", 
-    version="0.2.37",
+    version="0.2.43",
     author="Richard Peschke",
     author_email="peschke@hawaii.edu",
     description="build scripts for firmware projects",
@@ -26,12 +26,13 @@ setuptools.setup(
           'openpyxl',
           "dataframe_helpers",
           "watchdog",
-          "debugpy"
+          "debugpy",
+          "cocotb_test"
         
     ],
     python_requires='>=3.8',
     
     entry_points = {
-        'console_scripts': ['fmake=fmake.main_vhdl_make:main_vhdl_make'],
+        'console_scripts': ['fmake=fmake.fmake_main:fmake_main'],
     }
 )

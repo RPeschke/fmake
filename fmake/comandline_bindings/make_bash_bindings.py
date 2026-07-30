@@ -1,6 +1,6 @@
 
 
-from fmake.vhdl_programm_list import add_program,get_list_of_programms
+from fmake.programm_list import add_program,get_list_of_programms
 
 
 from fmake.user_program_runner import get_list_of_user_programs, get_program

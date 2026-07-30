@@ -1,7 +1,7 @@
 import os
 import time
 from datetime import datetime
-from fmake.vhdl_programm_list import add_program
+from fmake.programm_list import add_program
 import argparse
 from fmake.generic_helper import  extract_cl_arguments, save_file
 

@@ -3,12 +3,12 @@ import os
 
 import pandas as pd
 
-from .vhdl_get_list_of_files import getListOfFiles
+from .get_list_of_files import getListOfFiles
 
 
 
 
-from fmake.vhdl_load_file_without_comments import load_file_witout_comments
+from fmake.VHDL_tools.load_file_without_comments import load_file_witout_comments
 
 
 

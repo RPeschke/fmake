@@ -2,7 +2,7 @@ import re
 from xml.etree.ElementTree import fromstring, ParseError
 import random
 
-from fmake.vhdl_programm_list import add_program
+from fmake.programm_list import add_program
 from fmake.user_program_runner import parse_args_to_kwargs, get_list_of_user_programs, get_program
 
 md_config = {

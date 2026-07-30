@@ -1,10 +1,8 @@
 import os
-import shutil
 
-import pandas as pd
 import argparse
 
-from fmake.vhdl_programm_list import add_program
+from fmake.programm_list import add_program
 
 from fmake.generic_helper import  vprint,  save_file , load_file 
 

@@ -1,4 +1,4 @@
-from fmake.vhdl_programm_list import add_program
+from fmake.programm_list import add_program
 from fmake.generic_helper import  extract_cl_arguments, try_make_dir, save_file, constants
 import argparse
 

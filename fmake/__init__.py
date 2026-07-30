@@ -1,5 +1,5 @@
-import fmake.vhdl_run_vivado
-import fmake.vhdl_make_simulation
+import fmake.simulator_support.run_vivado
+import fmake.VHDL_tools.make_simulation
 
 
 
@@ -9,7 +9,7 @@ import fmake.vhdl_make_simulation
 import fmake.make_build_system
 
 
-from fmake.pyVivadoProject import pyVivadoProject, assert_file_exists , get_current_path 
+from fmake.pyFirmwareProject import pyFirmwareProject, assert_file_exists , get_current_path 
 
 
 
@@ -18,8 +18,8 @@ from fmake.pyVivadoProject import pyVivadoProject, assert_file_exists , get_curr
 
 
 
-import fmake.export_registers_from_csv
-import fmake.make_timestamps
+import fmake.VHDL_tools.export_registers_from_csv
+import fmake.VHDL_tools.make_timestamps
 
 from fmake.text_io_query import text_io_query
 
@@ -27,9 +27,9 @@ from fmake.generic_helper import get_project_directory , save_file, load_file
 
 from fmake.user_program_runner import program, target, config, get_program , user_programs_refresh, add_external_root, get_list_of_user_programs
 
-from fmake.mdPyEx import markdown_monitor, md_config
+from fmake.markdown.mdPyEx import markdown_monitor, md_config
 
-from fmake.vhdl_make_simulation import make_simulation, make_simulation_query_interface
+from fmake.VHDL_tools.make_simulation import make_simulation, make_simulation_query_interface
 
 
 import fmake.comandline_bindings.make_powershell_bindings 

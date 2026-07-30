@@ -1,10 +1,10 @@
 
 from matplotlib import lines
 import pandas as pd
-from .vhdl_parser import vhdl_parse_folder 
+from .parser import vhdl_parse_folder 
 
 
-from .generic_helper import save_file, try_make_dir,  first_diff_between_strings
+from ..generic_helper import save_file, try_make_dir,  first_diff_between_strings
 from fmake.generic_helper import  vprint
 
 
@@ -15,8 +15,8 @@ class dependency_db_cl:
         self.IsInitilized = False
         
         self.df = None
-        self.df_records = None
-        self.df_constants = None
+   
+
         
     def initilize(self):
         if self.IsInitilized:
@@ -36,11 +36,7 @@ class dependency_db_cl:
 
 
 
-    def entity2FileName(self, entityName):
-        if not  self.IsInitilized:
-            raise Exception("dependency_db_cl not initilized")
-        entity =  self.df[ (self.df["name"] == entityName.lower()) & ( self.df["type"] == "entityDef" )]["filename"].iloc[0]
-        return entity
+
 
     def get_dependencies(self, Entity):
         if not  self.IsInitilized:

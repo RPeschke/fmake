@@ -3,10 +3,10 @@ import os
 import argparse
 from fmake.generic_helper import try_make_dir,save_file,load_file, cl_add_entity
 
-from fmake.vhdl_dependency_db  import get_dependency_db
+from fmake.VHDL_tools.dependency_db  import get_dependency_db
 
 
-from fmake.vhdl_programm_list import  add_program
+from fmake.programm_list import  add_program
 from fmake.generic_helper import constants
 
 from fmake.generic_helper import  vprint, extract_cl_arguments

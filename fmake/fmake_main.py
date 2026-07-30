@@ -1,5 +1,5 @@
 import sys
-from fmake.vhdl_programm_list import get_function,  print_list_of_programs
+from fmake.programm_list import get_function,  print_list_of_programs
 
 from pathlib import Path
 from fmake.user_program_runner import  parse_args_to_kwargs, print_user_program_table , get_list_of_user_programs, get_program
@@ -111,7 +111,7 @@ def handle_unknown_program():
     
 
 
-def main_vhdl_make():
+def fmake_main():
     handle_path_argument()
 
     if  handle_not_enough_arguments():

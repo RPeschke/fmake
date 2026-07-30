@@ -46,63 +46,10 @@ def to_absolute(paths, base = None, caller_levels_up=1):
 def get_current_path():
     return get_caller_folder(levels_up=2)
 
-directory = get_project_directory()
-class pyVivadoProject:
-    def __init__(self, project_name):
-        self.project_name = project_name
-        self.project_path = None
-        self.project = None
-        self.top = None
-        self.sources = []
-        self.sources_sim = []
-        self.constraints = []
-        self.board = None
-        self.part = None
-        self.dependencies = []
-        self.block_designs = []
-        self.custom_code = []
-
-        self.vivado_path = None
-        self.vivado_params = []
-    
-    def add_vivado_params(self, name, params):
-        self.vivado_params += [(name, params)]
-    
-    def set_vivado_path(self, path):
-        self.vivado_path = assert_file_exists(path)
-    
-    def get_project_path(self):
-        return self.project_path if self.project_path else f"{directory}/build/{self.project_name}"
-    
-
-    def add_sources(self, sources , base = None):
-        self.sources += to_absolute(sources, base=base, caller_levels_up=3)
 
 
-    def add_sources_sim(self, sources , base = None):
-        self.sources_sim += to_absolute(sources, base=base, caller_levels_up=3)
 
-    def add_constraints(self, constraints , base = None):
-        self.constraints += to_absolute(constraints, base=base, caller_levels_up=3)
-        
-    def add_dependency(self, dependency, *args, **kwargs):
-        fmake.get_program(dependency)(self, *args, **kwargs)
-        self.dependencies.append(dependency)
-    
-    def assert_depenency_exists(self, dependency):
-        if dependency not in self.dependencies:
-            raise Exception(f"================================\nDependency '{dependency}' not found in project '{self.project_name}'. Please add it using 'add_dependency' method.\n================================")
-        
-    
-    def add_block_design(self, script_path, block_name):
-        # Implement logic to add a block design to the project
-        caller = get_caller_folder(levels_up=2)
-        script_path = assert_file_exists( 
-            to_absolute_internal(script_path,caller)
-        )
-        self.block_designs.append((script_path, block_name))
-
-    def make_vivado(self):
+def make_vivado(self):
         import os
         os.makedirs(self.get_project_path(), exist_ok=True)
         print(f"Creating Vivado project at: {self.get_project_path()}")
@@ -174,8 +121,78 @@ class pyVivadoProject:
         os.system(cmd)
 
         return path
+
+
+class pyFirmwareProject:
+    def __init__(self, project_name):
+        self.project_name = project_name
+        self.project_path = None
+        self.project = None
+        self.top = None
+        self.sources = []
+        self.sources_sim = []
+        self.constraints = []
+        self.board = None
+        self.part = None
+        self.dependencies = []
+        self.block_designs = []
+        self.custom_code = []
+
+        self.vivado_path = None
+        self.vivado_params = []
+        self.toolchain = "vivado"
+        self.__toolchain_function__= {
+            "vivado" : make_vivado
+        }
+    
+    def add_vivado_params(self, name, params):
+        self.vivado_params += [(name, params)]
+    
+    def set_vivado_path(self, path):
+        self.vivado_path = assert_file_exists(path)
+    
+    def get_project_path(self):
+        directory = get_project_directory()
+        return self.project_path if self.project_path else f"{directory}/build/{self.project_name}"
+    
+
+    def add_sources(self, sources , base = None):
+        self.sources += to_absolute(sources, base=base, caller_levels_up=3)
+
+    def add_custom_code(self, code ):
+        if not isinstance(code, str):
+            raise TypeError("code must be of type str")
+        self.custom_code.append(code)
+
+
+    def add_sources_sim(self, sources , base = None):
+        self.sources_sim += to_absolute(sources, base=base, caller_levels_up=3)
+
+    def add_constraints(self, constraints , base = None):
+        self.constraints += to_absolute(constraints, base=base, caller_levels_up=3)
         
+    def add_dependency(self, dependency, *args, **kwargs):
+        fmake.get_program(dependency)(self, *args, **kwargs)
+        self.dependencies.append(dependency)
+    
+    def assert_depenency_exists(self, dependency):
+        if dependency not in self.dependencies:
+            raise Exception(f"================================\nDependency '{dependency}' not found in project '{self.project_name}'. Please add it using 'add_dependency' method.\n================================")
+        
+    
+    def add_block_design(self, script_path, block_name):
+        # Implement logic to add a block design to the project
+        caller = get_caller_folder(levels_up=2)
+        script_path = assert_file_exists( 
+            to_absolute_internal(script_path,caller)
+        )
+        self.block_designs.append((script_path, block_name))
 
 
+    def make_project(self):
 
-
+        fun = self.__toolchain_function__.get(
+            self.toolchain, 
+            lambda x : print("unknown tool chain:" , self.toolchain)
+        )
+        fun(self)
