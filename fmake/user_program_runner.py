@@ -82,10 +82,10 @@ def _is_subpath(path_obj, base_dir_obj):
 
 
 def _get_callsite_script_path():
-    this_file = Path(__file__).resolve()
+    this_dir = Path(__file__).resolve().parent
     for frame in inspect.stack()[2:]:
         frame_path = Path(frame.filename).resolve()
-        if frame_path != this_file:
+        if not _is_subpath(frame_path, this_dir):
             return frame_path
     return None
 
@@ -103,7 +103,7 @@ def _filter_rows_for_callsite_subfolder(file_list):
     while True:
         filtered = []
         for row in file_list:
-            row_path = Path(row[0]).resolve()
+            row_path = Path(row['filename']).resolve()
             if _is_subpath(row_path, search_dir):
                 filtered.append(row)
 

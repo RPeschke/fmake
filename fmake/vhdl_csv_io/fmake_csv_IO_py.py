@@ -2,7 +2,7 @@
 fmake_csv_IO_py = """
 
 
-#@fmake.program
+{decorator}
 def fmake_csv_IO(prj):
     
     prj.add_sources_sim([
@@ -16,4 +16,6 @@ def fmake_csv_IO(prj):
             "type_conversions_helper.vhd",
     ])
     
-"""
+""".format(
+    decorator = "#@fmake.program"
+)
