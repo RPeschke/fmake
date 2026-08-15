@@ -50,7 +50,8 @@ def make_bash_bindings(x):
     ret = "#usage:\n#source <(fmake make-bash)\n\n\n"
 
     if not args.export_builtin_functions:
-        for f,_,p in user_programs:
+        for row in user_programs:
+            p = row["program_name"]
             fun  = get_program(p , keyword="program")
             sig = inspect.signature(fun)
             arguments = ["--" + sig.parameters[x].name for x in sig.parameters.keys()]

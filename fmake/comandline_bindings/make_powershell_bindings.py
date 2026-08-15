@@ -9,6 +9,7 @@ import inspect
 from fmake import get_project_directory  
 from fmake.generic_helper import try_load_file
 import argparse
+import fmake
 
 
 
@@ -79,7 +80,7 @@ def ps1_script_for_function_from_function(function_name, fun, project_path, Func
     
 
 def make_powershell_bindings(x):
-        #
+        
     parser = argparse.ArgumentParser(description='make powershell bindings')
     parser.add_argument('--prefix', type=str, default="")
     parser.add_argument(
@@ -94,8 +95,8 @@ def make_powershell_bindings(x):
     ret = ""
 
     if not args.export_builtin_functions:
-        for f,_,p in user_programs:
-            
+        for p in user_programs:
+            p = p["program_name"]
             fun  = get_program(p, keyword="program")
             ret += "\n\n" + ps1_script_for_function_from_function(p, fun,  projectdir, Function_prefix=args.prefix)
 
