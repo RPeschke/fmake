@@ -183,7 +183,7 @@ def print_user_program_table(user_programs, printer=print):
     printer(f"{'-' * program_width}  {'-' * 4}")
 
     for r in rows:
-        printer(f"{r["program_name"].ljust(program_width)}  {r["filename"]}")
+        printer(f"{r['program_name'].ljust(program_width)}  {r['filename']}")
 
 
 
@@ -359,7 +359,7 @@ def get_program_internal(param: program_parameters):
         if param.unique and len(programs) > 1:
             raise Exception(
                 f"Program '{programs[0][2]}' is not unique for this call site: "
-                f"{[row["filename"] for row in programs]}"
+                f"{[row['filename'] for row in programs]}"
             )
         return programs
 
@@ -378,7 +378,7 @@ def get_program_internal(param: program_parameters):
         if len(FileList) > 1:
             raise Exception(
                     f"Program '{param.Name}' is ambiguous for this call site: "
-                    f"{[row["filename"] for row in FileList]}"
+                    f"{[row['filename'] for row in FileList]}"
                 )
 
     def assert_function_found(module):

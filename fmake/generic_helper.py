@@ -51,8 +51,7 @@ def extract_cl_arguments(parser, x):
 def cl_add_entity(parser):
     parser.add_argument('--entity',      help='entity name',default="",required=True)
     
-def cl_add_OutputCSV(parser):
-    parser.add_argument('--OutputCSV',      help='output csv file',default="")
+
 
 def cl_add_gui(parser):
     parser.add_argument('--gui', dest='run_with_gui', action='store_const',
