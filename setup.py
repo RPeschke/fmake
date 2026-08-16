@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="fmake", 
-    version="0.3.4",
+    version="0.3.5",
     author="Richard Peschke",
     author_email="peschke@hawaii.edu",
     description="build scripts for firmware projects",

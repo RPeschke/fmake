@@ -126,7 +126,23 @@ def _filter_rows_for_callsite_subfolder(file_list):
         search_dir = parent
 
 
+class update_python_path_t:
+    def __init__(self, module_dir):
+        self.old_sys_path = sys.path.copy()
+        inserted_paths = [str(module_dir)]
+        current_dir = module_dir
+        while (current_dir / "__init__.py").exists():
+            current_dir = current_dir.parent
+            inserted_paths.append(str(current_dir))
+        
+        for p in inserted_paths:
+            sys.path.insert(0, p)
 
+    def undo(self):
+        sys.path[:] = self.old_sys_path
+
+    
+    
 
 def load_and_run_module(path_to_module):
     module_path = Path(path_to_module).resolve()
@@ -137,14 +153,15 @@ def load_and_run_module(path_to_module):
     spec = importlib.util.spec_from_file_location(module_name, str(module_path))
     module = importlib.util.module_from_spec(spec)
 
-    # Add module directory to sys.path for relative imports
-    sys.path.insert(0, str(module_dir))
+    # Add module directory to sys.path, plus each ancestor package root's parent
+    update_python_path = update_python_path_t(module_dir)
+   
 
     # Save current directory
     old_cwd = os.getcwd()
     try:
         # Change to module directory
-        os.chdir(module_dir)
+        os.chdir(str(module_dir))
 
         # Execute the module
         spec.loader.exec_module(module)
@@ -152,7 +169,8 @@ def load_and_run_module(path_to_module):
     finally:
         # Restore the original working directory and sys.path
         os.chdir(old_cwd)
-        sys.path.pop(0)
+        update_python_path.undo()
+        
 
     return module
 
