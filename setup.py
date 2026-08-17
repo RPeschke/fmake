@@ -1,11 +1,16 @@
 import setuptools
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+
+from pathlib import Path
+ROOT = Path(__file__).resolve().parent
+long_description = (ROOT / "README2.md").read_text(encoding="utf-8")
+
+
+
 
 setuptools.setup(
     name="fmake", 
-    version="0.3.5",
+    version="0.3.7",
     author="Richard Peschke",
     author_email="peschke@hawaii.edu",
     description="build scripts for firmware projects",
@@ -13,6 +18,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="",
     packages=setuptools.find_packages(),
+    data_files=[
+        ("", ["README.md", "README2.md"]),
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -23,7 +31,6 @@ setuptools.setup(
           'numpy',
           'matplotlib',
           'wget',
-          'openpyxl',
           "dataframe_helpers",
           "watchdog",
           "debugpy",
