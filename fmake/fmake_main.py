@@ -7,6 +7,8 @@ from fmake.generic_helper import set_project_directory
 import inspect
 import fmake
 
+from fmake.comandline_bindings.autocompletion import autocompletionPS
+
 import traceback
 
 def handle_path_argument():
@@ -21,6 +23,13 @@ def handle_path_argument():
         set_project_directory(str(p.resolve()))
 
         sys.argv = [sys.argv[0]] + sys.argv[3:]
+
+def handle_autocompletion_requests():
+    return autocompletionPS(sys.argv)
+
+
+
+            
     
 
 def handle_not_enough_arguments():
@@ -113,6 +122,9 @@ def handle_unknown_program():
 
 def fmake_main():
     handle_path_argument()
+
+    if handle_autocompletion_requests():
+        return
 
     if  handle_not_enough_arguments():
         return

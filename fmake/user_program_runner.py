@@ -178,16 +178,32 @@ def load_and_run_module(path_to_module):
 def parse_args_to_kwargs(arglist):
     args = []
     kwargs = {}
-    i = 0
-    while i < len(arglist):
-        if arglist[i].startswith("--"):
-            key = arglist[i][2:]  # remove leading '--'
-            value = arglist[i + 1] if i + 1 < len(arglist) else ""
-            kwargs[key] = value
-            i += 2
-        else:
-            args.append(arglist[i])
-            i += 1
+    
+    position_args = True
+    current_name = None 
+    print(arglist)
+    for arg in arglist:
+        print(arg)   
+        if arg.startswith("--"):
+            print("--")   
+            position_args = False
+            key = arg[2:]  # remove leading '--'
+            current_name = key
+            kwargs[key] = ""
+            
+        elif not position_args:
+            print("elif not position_args:")   
+            current_value = kwargs[current_name]
+            if isinstance(current_value, list):
+                current_value.append(arg)
+            elif  isinstance(current_value, str) and  len(current_value) > 0:
+                current_value = [current_value , arg]
+            elif  isinstance(current_value, str) and  len(current_value) == 0:
+                current_value = arg
+            kwargs[current_name] = current_value
+        elif position_args:
+            args.append(arg)
+            
     return args, kwargs
 
 

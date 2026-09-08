@@ -35,6 +35,7 @@ from fmake.VHDL_tools.make_simulation import make_simulation, make_simulation_qu
 
 import fmake.comandline_bindings.make_powershell_bindings 
 import fmake.comandline_bindings.make_bash_bindings
+import fmake.comandline_bindings.PS_autocomplete_script
 
 from fmake.attach_debugger import attach_debugger
 
