@@ -1,8 +1,9 @@
 import fmake
 
 import inspect
-f = open("dummy.txt" , "w")
+#f = open("dummy.txt" , "w")
 def write(txt):
+    return
     f.write( str(txt) + "\n")
 
 def autocompletionPS(argv):
@@ -16,9 +17,11 @@ def autocompletionPS(argv):
         fragment = argv[4]
 
     sp = []
-    r = argv[3]# [int(argv[2]):]
+    r = argv[3].strip()# [int(argv[2]):]
+    write("r: " + str(r))
     if len(r)>0:
         sp = r.split(" ")[1:]
+    write("sp: " + str(sp))
 
     if fragment is not None:
         sp = [x for x in sp if fragment != x]
@@ -26,7 +29,31 @@ def autocompletionPS(argv):
     autocompletion(fragment, sp)
     return True 
 
+def autocompletionBash(argv):
+    write(str(argv))
+    if not (len(argv) >= 3  and  argv[1] == "--autocompleteBash"):
+        return False
 
+    fragment = None
+    if len(argv) == 5 and len(argv[4]) >0:
+        fragment = argv[4]
+    #print(argv)
+
+    sp = []
+    r = argv[3].strip()# [int(argv[2]):]
+    write("r: " + str(r))
+    if len(r)>0:
+        sp = r.split(" ")[1:]
+    write("sp: " + str(sp))
+
+    if fragment is not None:
+        sp = [x for x in sp if fragment != x]
+    write("'" + str(fragment) + " " + str(sp) + "'")
+    autocompletion(fragment, sp)
+
+
+    return True 
+    
 def handle_program_selection(fragment, arglist):
     if len(arglist) != 0:
         return False
@@ -70,5 +97,7 @@ def autocompletion(fragment, arglist):
     arguments = [x for x in arguments if x not in arglist]
     if fragment:
         arguments = [x for x in arguments if x.startswith(fragment)]
+    write( "arguments: " +  str(arguments))
     for argument in arguments:
+        
         print(argument)

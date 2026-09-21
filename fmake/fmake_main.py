@@ -7,7 +7,7 @@ from fmake.generic_helper import set_project_directory
 import inspect
 import fmake
 
-from fmake.comandline_bindings.autocompletion import autocompletionPS
+from fmake.comandline_bindings.autocompletion import autocompletionPS, autocompletionBash
 
 import traceback
 
@@ -25,7 +25,11 @@ def handle_path_argument():
         sys.argv = [sys.argv[0]] + sys.argv[3:]
 
 def handle_autocompletion_requests():
-    return autocompletionPS(sys.argv)
+    if autocompletionPS(sys.argv):
+        return True
+    if autocompletionBash(sys.argv):
+        return True
+    return False
 
 
 
@@ -40,6 +44,11 @@ def handle_not_enough_arguments():
         user_programs = get_list_of_user_programs(keyword="program")
         print("\n\nUser programs:")
         print_user_program_table(user_programs)
+
+        print(""" 
+
+
+""")
         return True
 
     return False

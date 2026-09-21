@@ -3,15 +3,17 @@ from fmake.programm_list import add_program
 
 
 def PSautocomplete(argv):
-    print(r'''
+    print('''
+# Rund the script like this
+# . ([ScriptBlock]::Create((fmake make-psautocomplete | Out-String))) 
 Register-ArgumentCompleter -Native -CommandName fmake -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
 
     $matches = @(
-        & fmake --autocompletePS -- `
+        & fmake --autocompletePS `
             $cursorPosition `
             $commandAst.ToString() `
-            $wordToComplete
+            $wordToComplete             
     )
 
     if ($matches -contains "__FMAKE_DEFAULT__") {
@@ -19,6 +21,7 @@ Register-ArgumentCompleter -Native -CommandName fmake -ScriptBlock {
     }
 
     foreach ($match in $matches) {
+
         if (-not $match) {
             continue
         }

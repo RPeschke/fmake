@@ -181,18 +181,18 @@ def parse_args_to_kwargs(arglist):
     
     position_args = True
     current_name = None 
-    print(arglist)
+    #print(arglist)
     for arg in arglist:
-        print(arg)   
+     #   print(arg)   
         if arg.startswith("--"):
-            print("--")   
+      #      print("--")   
             position_args = False
             key = arg[2:]  # remove leading '--'
             current_name = key
             kwargs[key] = ""
             
         elif not position_args:
-            print("elif not position_args:")   
+         #   print("elif not position_args:")   
             current_value = kwargs[current_name]
             if isinstance(current_value, list):
                 current_value.append(arg)
