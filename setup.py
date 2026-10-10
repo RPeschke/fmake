@@ -10,9 +10,11 @@ long_description = (ROOT / "README2.md").read_text(encoding="utf-8")
 
 setuptools.setup(
     name="fmake", 
-    version="0.3.7",
+    version="0.3.25",
     author="Richard Peschke",
     author_email="peschke@hawaii.edu",
+    license="MIT",
+    license_files=["LICENSE"],
     description="build scripts for firmware projects",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -23,7 +25,6 @@ setuptools.setup(
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     install_requires=[
