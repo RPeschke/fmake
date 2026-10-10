@@ -29,19 +29,13 @@ def doc():
 def build():
     doc()
 
-    result = subprocess.run(
+    subprocess.run(
         [sys.executable, "-m", "build"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
+        check=True,
     )
 
-    print(result.stdout)
+ 
 
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"Package build failed with return code {result.returncode}"
-        )
     print("done building")
 
     
@@ -56,13 +50,11 @@ def upload():
             "dist/*",
             "--verbose",
         ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
+        check=True,
         shell=True,
     )
 
-    print(result.stdout)
+
     result.check_returncode()
     print("done uploading")
 
